@@ -87,7 +87,7 @@ export function prodRemotePlugin(
 
                 const initMap = Object.create(null);
 
-                async function __federation_method_ensure(remoteId) {
+                async function ensure(remoteId) {
                     const remote = remotesMap[remoteId];
                     if (!remote.inited) {
                         if ('var' === remote.format) {
@@ -126,11 +126,11 @@ export function prodRemotePlugin(
                     }
                 }
 
-                function __federation_method_unwrapDefault(module) {
+                function unwrapDefault(module) {
                     return (module?.__esModule || module?.[Symbol.toStringTag] === 'Module') ? module.default : module
                 }
 
-                function __federation_method_wrapDefault(module, need) {
+                function wrapDefault(module, need) {
                     if (!module?.default && need) {
                         let obj = Object.create(null);
                         obj.default = module;
@@ -140,21 +140,19 @@ export function prodRemotePlugin(
                     return module;
                 }
 
-                function __federation_method_getRemote(remoteName, componentName) {
-                    return __federation_method_ensure(remoteName).then((remote) => remote.get(componentName).then(factory => factory()));
+                function getRemote(remoteName, componentName) {
+                    return ensure(remoteName).then((remote) => remote.get(componentName).then(factory => factory()));
                 }
 
-                function __federation_method_importRef(source, varName) {
+                function setRemote(remoteName, remoteConfig) {
+                  remotesMap[remoteName] = remoteConfig;
+                }
+
+                function importRef(source, varName) {
                     return source[varName]
                 }
 
-                export {
-                    __federation_method_ensure,
-                    __federation_method_getRemote,
-                                        __federation_method_unwrapDefault,
-                    __federation_method_wrapDefault,
-                    __federation_method_importRef
-                }
+                export { ensure, getRemote, setRemote, unwrapDefault, wrapDefault, importRef }
             `
     },
 
@@ -558,7 +556,7 @@ export function prodRemotePlugin(
 
         if (requiresRuntime) {
           magicString.prepend(
-            `import {__federation_method_ensure, __federation_method_getRemote , __federation_method_wrapDefault , __federation_method_unwrapDefault, __federation_method_importRef} from '__federation__';\n\n`
+            `import { ensure as __federation_method_ensure, getRemote as __federation_method_getRemote, wrapDefault as __federation_method_wrapDefault, unwrapDefault as __federation_method_unwrapDefault, importRef as __federation_method_importRef } from '__federation__';\n\n`
           )
         }
 
