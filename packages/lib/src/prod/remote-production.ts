@@ -145,11 +145,11 @@ export function prodRemotePlugin(
                 }
 
                 function setRemote(remoteName, remoteConfig) {
-                  remotesMap[remoteName] = remoteConfig;
+                    remotesMap[remoteName] = remoteConfig;
                 }
 
                 function importRef(source, varName) {
-                    return source[varName]
+                    return source[varName] ?? source.default?.[varName]
                 }
 
                 export { ensure, getRemote, setRemote, unwrapDefault, wrapDefault, importRef }

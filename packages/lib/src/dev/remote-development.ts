@@ -155,7 +155,7 @@ function setRemote(remoteName, remoteConfig) {
 }
 
 function importRef(source, varName) {
-  return source[varName]
+  return source[varName] ?? source.default?.[varName]
 }
 export { ensure, getRemote, setRemote, unwrapDefault, wrapDefault, importRef }`
     },
