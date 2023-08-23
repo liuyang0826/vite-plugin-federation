@@ -55,7 +55,7 @@ export function prodExposePlugin(
     )
     moduleMap += `\n"${item[0]}":()=>{
       ${DYNAMIC_LOADING_CSS}('${DYNAMIC_LOADING_CSS_PREFIX}${exposeFilepath}')
-      return __federation_import('\${__federation_expose_${item[0]}}').then(module =>Object.keys(module).every(item => exportSet.has(item)) ? () => module.default : () => module)},`
+      return __federation_import('\${__federation_expose_${item[0]}}').then(module => () => module)},`
   }
 
   let viteConfigResolved: ResolvedConfig
@@ -66,7 +66,6 @@ export function prodExposePlugin(
       // code generated for remote
       // language=JS
       __remoteEntryHelper__: `
-      const exportSet = new Set(['Module', '__esModule', 'default', '_export_sfc']);
       let moduleMap = {${moduleMap}}
     const seen = {}
     export const ${DYNAMIC_LOADING_CSS} = (cssFilePaths) => {
@@ -75,7 +74,9 @@ export function prodExposePlugin(
         console.warn('The remote style takes effect only when the build.target option in the vite.config.ts file is higher than that of "es2020".')
         return
       }
-      const curUrl = metaUrl.substring(0, metaUrl.lastIndexOf('${options.filename}'))
+      const curUrl = metaUrl.substring(0, metaUrl.lastIndexOf('${
+        options.filename
+      }'))
 
       cssFilePaths.forEach(cssFilePath => {
         const href = curUrl + cssFilePath
@@ -87,7 +88,10 @@ export function prodExposePlugin(
       })
     };
     async function __federation_import(name) {
-        return import(name);
+      return import(name).then(async res => {
+        await res.${options.promiseExportName || '__tla'}
+        return res
+      });
     };
     export const get =(module) => {
         return moduleMap[module]();

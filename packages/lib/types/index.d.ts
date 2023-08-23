@@ -82,6 +82,12 @@ declare interface VitePluginFederationOptions {
    * Current operating mode
    */
   mode?: string
+
+  /**
+   * top-level-await promiseExportName
+   * @default __tla
+   */
+  promiseExportName?: string
 }
 
 type Exposes = (string | ExposesObject)[] | ExposesObject

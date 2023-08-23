@@ -42,6 +42,8 @@
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s --commit-path ."
   },
   "dependencies": {
+    "@babel/parser": "^7.22.10",
+    "@babel/traverse": "^7.22.10",
     "estree-walker": "^3.0.2",
     "magic-string": "^0.27.0"
   },

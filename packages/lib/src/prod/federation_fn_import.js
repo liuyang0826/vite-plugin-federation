@@ -32,8 +32,6 @@ async function getSharedFromRuntime(name, shareScope) {
     }
   }
   if (module) {
-    if (module.default && Object.keys(module).length < 2)
-      module = module.default
     moduleCache[name] = module
     return module
   }
@@ -41,8 +39,6 @@ async function getSharedFromRuntime(name, shareScope) {
 async function getSharedFromLocal(name) {
   if (moduleMap[name]?.import) {
     let module = await (await moduleMap[name].get())()
-    if (module.default && Object.keys(module).length < 2)
-      module = module.default
     moduleCache[name] = module
     return module
   } else {

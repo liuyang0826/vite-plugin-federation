@@ -12,7 +12,7 @@
 </template>
 
 <script>
-import {counterState} from '../store'
+import {counterState} from 'myStore'
 
 export default {
   setup() {
