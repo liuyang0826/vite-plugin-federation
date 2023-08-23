@@ -15,9 +15,11 @@
 
 import type { ConfigTypeSet, VitePluginFederationOptions } from 'types'
 import traverse from '@babel/traverse'
+import type { ParseResult } from '@babel/parser'
+import type { File } from '@babel/types'
 import { parse } from '@babel/parser'
 import MagicString from 'magic-string'
-import type { AcornNode, TransformPluginContext } from 'rollup'
+import type { TransformPluginContext } from 'rollup'
 import {
   createRemotesMap,
   getModuleMarker,
@@ -149,7 +151,7 @@ export function prodRemotePlugin(
                 export {
                     __federation_method_ensure,
                     __federation_method_getRemote,
-                    __federation_method_unwrapDefault,
+                                        __federation_method_unwrapDefault,
                     __federation_method_wrapDefault,
                     __federation_method_importRef
                 }
@@ -232,7 +234,7 @@ export function prodRemotePlugin(
       }
 
       if (builderInfo.isHost || builderInfo.isShared) {
-        let ast: AcornNode | null = null
+        let ast: ParseResult<File> | null = null
         try {
           ast = parse(code, { sourceType: 'module' })
         } catch (err) {
@@ -503,7 +505,7 @@ export function prodRemotePlugin(
         const sources = Object.keys(sourceLocalNamesMap)
         if (sources.length) {
           traverse.default(ast, {
-            Program(path: any) {
+            Program(path) {
               sources.forEach((source) => {
                 sourceLocalNamesMap[source].forEach(
                   ({ localName, isDefault }) => {

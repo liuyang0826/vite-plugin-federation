@@ -16,7 +16,8 @@ export default defineConfig({
         'crypto',
         'magic-string',
         '@babel/traverse',
-        '@babel/parser'
+        '@babel/parser',
+        'local-pkg'
       ],
       output: {
         minifyInternalExports: false

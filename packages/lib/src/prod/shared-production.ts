@@ -18,9 +18,10 @@ import { NAME_CHAR_REG, parseSharedOptions, removeNonRegLetter } from '../utils'
 import { builderInfo, parsedOptions } from '../public'
 import type { ConfigTypeSet, VitePluginFederationOptions } from 'types'
 import { basename, join, resolve } from 'path'
-import { readdirSync, readFileSync, statSync } from 'fs'
+import { readdirSync, statSync } from 'fs'
 const sharedFilePathReg = /__federation_shared_(.+)\.js$/
 import federation_fn_import from './federation_fn_import.js?raw'
+import { getPackageInfo } from 'local-pkg'
 
 export function prodSharedPlugin(
   options: VitePluginFederationOptions
@@ -87,13 +88,13 @@ export function prodSharedPlugin(
       //  try to get every module package.json file
       for (const arr of parsedOptions.prodShared) {
         if (isHost && !arr[1].version && !arr[1].manuallyPackagePathSetting) {
-          const packageJsonPath = (
-            await this.resolve(`${arr[1].packagePath}/package.json`)
-          )?.id
-          if (packageJsonPath) {
-            const packageJson = JSON.parse(
-              readFileSync(packageJsonPath, { encoding: 'utf-8' })
-            )
+          let packageJson
+          try {
+            packageJson = (await getPackageInfo(arr[0]))?.packageJson
+          } catch {
+            /* noop */
+          }
+          if (packageJson) {
             arr[1].version = packageJson.version
           } else {
             arr[1].removed = true

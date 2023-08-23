@@ -20,10 +20,11 @@ import type {
   VitePluginFederationOptions
 } from 'types'
 import traverse from '@babel/traverse'
+import type { ParseResult } from '@babel/parser'
+import type { File } from '@babel/types'
 import { parse } from '@babel/parser'
 import MagicString from 'magic-string'
-import { readFileSync } from 'fs'
-import type { AcornNode, TransformPluginContext } from 'rollup'
+import type { TransformPluginContext } from 'rollup'
 import type { ViteDevServer } from '../../types/viteDevServer'
 import {
   createRemotesMap,
@@ -35,6 +36,7 @@ import {
 } from '../utils'
 import { builderInfo, parsedOptions } from '../public'
 import type { PluginHooks } from '../../types/pluginHooks'
+import { getPackageInfo } from 'local-pkg'
 
 export function devRemotePlugin(
   options: VitePluginFederationOptions
@@ -178,18 +180,18 @@ export {__federation_method_ensure, __federation_method_getRemote , __federation
       if (builderInfo.isHost && !builderInfo.isRemote) {
         for (const arr of parsedOptions.devShared) {
           if (!arr[1].version && !arr[1].manuallyPackagePathSetting) {
-            const packageJsonPath = (
-              await this.resolve(`${arr[0]}/package.json`)
-            )?.id
-            if (!packageJsonPath) {
+            let packageJson
+            try {
+              packageJson = (await getPackageInfo(arr[0]))?.packageJson
+            } catch {
+              /* noop */
+            }
+            if (!packageJson) {
               this.error(
-                `No description file or no version in description file (usually package.json) of ${arr[0]}(${packageJsonPath}). Add version to description file, or manually specify version in shared config.`
+                `No description file or no version in description file (usually package.json) of ${arr[0]}. Add version to description file, or manually specify version in shared config.`
               )
             } else {
-              const json = JSON.parse(
-                readFileSync(packageJsonPath, { encoding: 'utf-8' })
-              )
-              arr[1].version = json.version
+              arr[1].version = packageJson.version
             }
           }
         }
@@ -209,7 +211,7 @@ export {__federation_method_ensure, __federation_method_getRemote , __federation
         return
       }
 
-      let ast: AcornNode | null = null
+      let ast: ParseResult<File> | null = null
       try {
         ast = parse(code, { sourceType: 'module' })
       } catch (err) {

@@ -1128,22 +1128,53 @@ importers:
       estree-walker:
         specifier: ^3.0.2
         version: 3.0.2
+      local-pkg:
+        specifier: ^0.4.3
+        version: 0.4.3
       magic-string:
         specifier: ^0.27.0
         version: 0.27.0
     devDependencies:
+      '@babel/types':
+        specifier: ^7.22.10
+        version: 7.22.10
       '@rollup/plugin-virtual':
         specifier: ^3.0.1
-        version: 3.0.1
+        version: 3.0.1(rollup@3.23.1)
       '@types/estree':
         specifier: ^0.0.50
         version: 0.0.50
       conventional-changelog-cli:
         specifier: ^2.1.1
         version: 2.2.2
+      rollup:
+        specifier: ^3.9.1
+        version: 3.23.1
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
+      vite:
+        specifier: ^4.0.5
+        version: 4.0.5(@types/node@18.6.4)
+
+  packages/temp/webpack-host/remote:
+    dependencies:
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+    devDependencies:
+      '@types/react':
+        specifier: ^18.0.17
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      '@vitejs/plugin-react':
+        specifier: ^3.0.0
+        version: 3.0.0(vite@4.0.5)
       vite:
         specifier: ^4.0.5
         version: 4.0.5(@types/node@18.6.4)
@@ -1215,7 +1246,7 @@ packages:
       '@babel/parser': 7.22.10
       '@babel/template': 7.20.7
       '@babel/traverse': 7.22.10
-      '@babel/types': 7.20.7
+      '@babel/types': 7.22.10
       convert-source-map: 1.8.0
       debug: 4.3.4
       gensync: 1.0.0-beta.2
@@ -1495,10 +1526,6 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/types': 7.22.10
-
-  /@babel/helper-string-parser@7.19.4:
-    resolution: {integrity: sha512-nHtDoQcuqFmwYNYPz3Rah5ph2p8PFeFCsZk9A/48dPc/rGocJ5J3hAAZ7pb76VWX3fZKu+uEr/FhH5jLx7umrw==}
-    engines: {node: '>=6.9.0'}
 
   /@babel/helper-string-parser@7.22.5:
     resolution: {integrity: sha512-mM4COjgZox8U+JcXQwPijIZLElkgEpO5rsERVDJTc2qfCDfERyob6k5WegS14SX18IIjv+XD+GrqNumY5JRCDw==}
@@ -2422,7 +2449,7 @@ packages:
       '@babel/plugin-transform-unicode-escapes': 7.18.6(@babel/core@7.20.7)
       '@babel/plugin-transform-unicode-regex': 7.18.6(@babel/core@7.20.7)
       '@babel/preset-modules': 0.1.5(@babel/core@7.20.7)
-      '@babel/types': 7.18.7
+      '@babel/types': 7.22.10
       babel-plugin-polyfill-corejs2: 0.2.3(@babel/core@7.20.7)
       babel-plugin-polyfill-corejs3: 0.2.5(@babel/core@7.20.7)
       babel-plugin-polyfill-regenerator: 0.2.3(@babel/core@7.20.7)
@@ -2499,22 +2526,6 @@ packages:
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
-
-  /@babel/types@7.18.7:
-    resolution: {integrity: sha512-QG3yxTcTIBoAcQmkCs+wAPYZhu7Dk9rXKacINfNbdJDNERTbLQbHGyVG8q/YGMPeCJRIhSY0+fTc5+xuh6WPSQ==}
-    engines: {node: '>=6.9.0'}
-    dependencies:
-      '@babel/helper-validator-identifier': 7.18.6
-      to-fast-properties: 2.0.0
-    dev: true
-
-  /@babel/types@7.20.7:
-    resolution: {integrity: sha512-69OnhBxSSgK0OzTJai4kyPDiKTIe3j+ctaHdIGVbRahTLAT7L3R9oeXHC2aVSuGYt3cVnoAMDmOCgJ2yaiLMvg==}
-    engines: {node: '>=6.9.0'}
-    dependencies:
-      '@babel/helper-string-parser': 7.19.4
-      '@babel/helper-validator-identifier': 7.19.1
-      to-fast-properties: 2.0.0
 
   /@babel/types@7.22.10:
     resolution: {integrity: sha512-obaoigiLrlDZ7TUQln/8m4mSqIW2QFeOrCQc9r+xsaHGNoplVNYlRVpsfE8Vj35GEm2ZH4ZhrNYogs/3fj85kg==}
@@ -3112,7 +3123,7 @@ packages:
       rollup: 3.9.1
     dev: true
 
-  /@rollup/plugin-virtual@3.0.1:
+  /@rollup/plugin-virtual@3.0.1(rollup@3.23.1):
     resolution: {integrity: sha512-fK8O0IL5+q+GrsMLuACVNk2x21g3yaw+sG2qn16SnUd3IlBsQyvWxLMGHmCmXRMecPjGRSZ/1LmZB4rjQm68og==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -3120,6 +3131,8 @@ packages:
     peerDependenciesMeta:
       rollup:
         optional: true
+    dependencies:
+      rollup: 3.23.1
     dev: true
 
   /@rollup/pluginutils@4.2.1:
@@ -6635,10 +6648,9 @@ packages:
       json5: 2.2.1
     dev: true
 
-  /local-pkg@0.4.2:
-    resolution: {integrity: sha512-mlERgSPrbxU3BP4qBqAvvwlgW4MTg78iwJdGGnv7kibKjWcJksrG3t6LB5lXI93wXRDvG4NpUgJFmTG4T6rdrg==}
+  /local-pkg@0.4.3:
+    resolution: {integrity: sha512-SFppqq5p42fe2qcZQqqEOiVRXl+WCP1MdT6k7BDEW1j++sp5fIY+/fdRQitvKgB5BrBcmrs5m/L0v2FrU5MY1g==}
     engines: {node: '>=14'}
-    dev: true
 
   /locate-path@2.0.0:
     resolution: {integrity: sha512-NCI2kiDkyR7VeEKm27Kda/iQHyKJe1Bu0FlTbYp3CqJu+9IFe9bLyAjMxf5ZDDbEg+iMPzB5zYyUTSm8wVTKmA==}
@@ -8982,7 +8994,7 @@ packages:
       acorn-walk: 8.2.0
       chai: 4.3.7
       debug: 4.3.4
-      local-pkg: 0.4.2
+      local-pkg: 0.4.3
       source-map: 0.6.1
       strip-literal: 1.0.0
       tinybench: 2.3.1
