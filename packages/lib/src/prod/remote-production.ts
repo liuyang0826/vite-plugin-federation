@@ -106,8 +106,8 @@ export function prodRemotePlugin(
                         } else if (['esm', 'systemjs'].includes(remote.format)) {
                             // loading js with import(...)
                             return new Promise((resolve, reject) => {
-                                const getUrl = typeof remote.url === 'function' ? remote.url : () => Promise.resolve(remote.url);
-                                getUrl().then(url => {
+                                const getUrl = typeof remote.url === 'function' ? remote.url : () => remote.url;
+                                Promise.resolve(getUrl()).then(url => {
                                     import(/* @vite-ignore */ url).then(lib => {
                                         if (!remote.inited) {
                                             const shareScope = wrapShareModule(remote.from)
