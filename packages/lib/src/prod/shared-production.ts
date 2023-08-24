@@ -85,39 +85,43 @@ export function prodSharedPlugin(
       const monoRepos: { arr: string[]; root: string | ConfigTypeSet }[] = []
       const dirPaths: string[] = []
       const currentDir = resolve()
-      //  try to get every module package.json file
-      for (const arr of parsedOptions.prodShared) {
-        if (isHost && !arr[1].version && !arr[1].manuallyPackagePathSetting) {
-          let packageJson
-          try {
-            packageJson = (await getPackageInfo(arr[0]))?.packageJson
-          } catch {
-            /* noop */
-          }
-          if (packageJson) {
-            arr[1].version = packageJson.version
-          } else {
-            arr[1].removed = true
-            const dir = join(currentDir, 'node_modules', arr[0])
-            const dirStat = statSync(dir)
-            if (dirStat.isDirectory()) {
-              collectDirFn(dir, dirPaths)
+
+      if (isHost) {
+        //  try to get every module package.json file
+        for (const arr of parsedOptions.prodShared) {
+          if (!arr[1].version && !arr[1].manuallyPackagePathSetting) {
+            let packageJson
+            try {
+              packageJson = (await getPackageInfo(arr[0]))?.packageJson
+            } catch {
+              /* noop */
+            }
+            if (packageJson) {
+              arr[1].version = packageJson.version
             } else {
-              this.error(`cant resolve "${arr[1].packagePath}"`)
+              arr[1].removed = true
+              const dir = join(currentDir, 'node_modules', arr[0])
+              const dirStat = statSync(dir)
+              if (dirStat.isDirectory()) {
+                collectDirFn(dir, dirPaths)
+              } else {
+                this.error(`cant resolve "${arr[1].packagePath}"`)
+              }
+
+              if (dirPaths.length > 0) {
+                monoRepos.push({ arr: dirPaths, root: arr })
+              }
             }
 
-            if (dirPaths.length > 0) {
-              monoRepos.push({ arr: dirPaths, root: arr })
+            if (!arr[1].removed && !arr[1].version) {
+              this.error(
+                `No description file or no version in description file (usually package.json) of ${arr[0]}. Add version to description file, or manually specify version in shared config.`
+              )
             }
-          }
-
-          if (!arr[1].removed && !arr[1].version) {
-            this.error(
-              `No description file or no version in description file (usually package.json) of ${arr[0]}. Add version to description file, or manually specify version in shared config.`
-            )
           }
         }
       }
+
       parsedOptions.prodShared = parsedOptions.prodShared.filter(
         (item) => !item[1].removed
       )
