@@ -1,6 +1,6 @@
 {
-  "name": "@originjs/vite-plugin-federation",
-  "version": "1.2.3",
+  "name": "@liuyang0826/vite-plugin-federation",
+  "version": "0.0.1",
   "description": "A Vite plugin which support Module Federation.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -30,7 +30,10 @@
     "vite",
     "plugins"
   ],
-  "author": "@originjs",
+  "author": "@liuyang0826",
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "MulanPSL-2.0",
   "bugs": {
     "url": "https://github.com/originjs/vite-plugin-federation/issues"

@@ -1,5 +1,7 @@
 # vite-plugin-federation
 
+> NOTE: this plugin is forked from [@originjs/vite-plugin-federation](https://github.com/originjs/vite-plugin-federation), It is a low-level tool for specific use cases.
+
 A Vite/Rollup plugin which support Module Federation.
 Inspired by Webpack and compatible with [Webpack Module Federation](https://webpack.js.org/concepts/module-federation/).
 
