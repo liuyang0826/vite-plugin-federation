@@ -13,7 +13,7 @@
     "pinia": "^2.0.21"
   },
   "devDependencies": {
-    "@originjs/vite-plugin-federation": "workspace:*",
+    "@liuyang0826/vite-plugin-federation": "workspace:*",
     "@vitejs/plugin-vue": "^4.0.0",
     "vite": "^4.0.5"
   }

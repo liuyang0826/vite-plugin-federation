@@ -5,9 +5,9 @@ English | [简体中文](./README-zh.md)
   <a href="https://bestpractices.coreinfrastructure.org/projects/5752"><img src="https://bestpractices.coreinfrastructure.org/projects/5752/badge"></a>
   <a href="https://api.securityscorecards.dev/projects/github.com/originjs/vite-plugin-federation"><img src="https://api.securityscorecards.dev/projects/github.com/originjs/vite-plugin-federation/badge"></a>
   <a href="https://github.com/originjs/vite-plugin-federation/actions/workflows/ci.yml"><img src="https://github.com/originjs/vite-plugin-federation/actions/workflows/ci.yml/badge.svg?branch=main" alt="Build Status"></a>
-  <a href="https://www.npmjs.com/package/@originjs/vite-plugin-federation"><img src="https://badgen.net/npm/v/@originjs/vite-plugin-federation" alt="Version"></a>
+  <a href="https://www.npmjs.com/package/@liuyang0826/vite-plugin-federation"><img src="https://badgen.net/npm/v/@liuyang0826/vite-plugin-federation" alt="Version"></a>
   <a href="https://nodejs.org/en/about/releases/"><img src="https://img.shields.io/node/v/vite.svg" alt="Node Compatibility"></a>
-  <a href="https://www.npmjs.com/package/@originjs/vite-plugin-federation"><img src="https://badgen.net/npm/license/@originjs/vite-plugin-federation" alt="License"></a>
+  <a href="https://www.npmjs.com/package/@liuyang0826/vite-plugin-federation"><img src="https://badgen.net/npm/license/@liuyang0826/vite-plugin-federation" alt="License"></a>
  </p>
 
 A Vite/Rollup plugin which support Module Federation.
@@ -20,13 +20,13 @@ Inspired by Webpack and compatible with [Webpack Module Federation](https://webp
 ## Install
 
 ```
-npm install @originjs/vite-plugin-federation --save-dev
+npm install @liuyang0826/vite-plugin-federation --save-dev
 ```
 
 or
 
 ```
-yarn add @originjs/vite-plugin-federation --dev
+yarn add @liuyang0826/vite-plugin-federation --dev
 ```
 
 ## Usage
@@ -36,7 +36,7 @@ Using the `Module Federation` usually requires more than 2 projects, one as the 
 
 ```js
 // vite.config.js
-import federation from "@originjs/vite-plugin-federation";
+import federation from "@liuyang0826/vite-plugin-federation";
 export default {
     plugins: [
         federation({
@@ -56,7 +56,7 @@ export default {
 
 ```js
 // rollup.config.js
-import federation from '@originjs/vite-plugin-federation'
+import federation from '@liuyang0826/vite-plugin-federation'
 export default {
     input: 'src/index.js',
     plugins: [
@@ -79,7 +79,7 @@ export default {
 
 ```js
 // vite.config.js
-import federation from "@originjs/vite-plugin-federation";
+import federation from "@liuyang0826/vite-plugin-federation";
 export default {
     plugins: [
         federation({
@@ -97,7 +97,7 @@ export default {
 
 ```js
 // rollup.config.js
-import federation from '@originjs/vite-plugin-federation'
+import federation from '@liuyang0826/vite-plugin-federation'
 export default {
     input: 'src/index.js',
     plugins: [

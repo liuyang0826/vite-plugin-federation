@@ -1,4 +1,4 @@
-import federation from "@originjs/vite-plugin-federation";
+import federation from "@liuyang0826/vite-plugin-federation";
 
 import pkg from "./package.json" assert { type: "json" };
 

@@ -6,9 +6,9 @@
   <a href="https://bestpractices.coreinfrastructure.org/projects/5752"><img src="https://bestpractices.coreinfrastructure.org/projects/5752/badge"></a>
   <a href="https://api.securityscorecards.dev/projects/github.com/originjs/vite-plugin-federation"><img src="https://api.securityscorecards.dev/projects/github.com/originjs/vite-plugin-federation/badge"></a>
   <a href="https://github.com/originjs/vite-plugin-federation/actions/workflows/ci.yml"><img src="https://github.com/originjs/vite-plugin-federation/actions/workflows/ci.yml/badge.svg?branch=main" alt="Build Status"></a>
-  <a href="https://www.npmjs.com/package/@originjs/vite-plugin-federation"><img src="https://badgen.net/npm/v/@originjs/vite-plugin-federation" alt="Version"></a>
+  <a href="https://www.npmjs.com/package/@liuyang0826/vite-plugin-federation"><img src="https://badgen.net/npm/v/@liuyang0826/vite-plugin-federation" alt="Version"></a>
   <a href="https://nodejs.org/en/about/releases/"><img src="https://img.shields.io/node/v/vite.svg" alt="Node Compatibility"></a>
-  <a href="https://www.npmjs.com/package/@originjs/vite-plugin-federation"><img src="https://badgen.net/npm/license/@originjs/vite-plugin-federation" alt="License"></a>
+  <a href="https://www.npmjs.com/package/@liuyang0826/vite-plugin-federation"><img src="https://badgen.net/npm/license/@liuyang0826/vite-plugin-federation" alt="License"></a>
  </p>
 
 支持模块联邦Module Federation的 Vite/Rollup 插件，可以与 [Webpack Module Federation](https://webpack.js.org/concepts/module-federation/) 兼容。
@@ -20,13 +20,13 @@
 ## 安装
 
 ```
-npm install @originjs/vite-plugin-federation --save-dev
+npm install @liuyang0826/vite-plugin-federation --save-dev
 ```
 
 或者
 
 ```
-yarn add @originjs/vite-plugin-federation --dev
+yarn add @liuyang0826/vite-plugin-federation --dev
 ```
 
 ## 使用
@@ -39,7 +39,7 @@ yarn add @originjs/vite-plugin-federation --dev
   
 ```js
 // vite.config.js
-import federation from "@originjs/vite-plugin-federation";
+import federation from "@liuyang0826/vite-plugin-federation";
 export default {
     plugins: [
         federation({
@@ -58,7 +58,7 @@ export default {
 
 ```js
 // rollup.config.js
-import federation from '@originjs/vite-plugin-federation'
+import federation from '@liuyang0826/vite-plugin-federation'
 export default {
     input: 'src/index.js',
     plugins: [
@@ -80,7 +80,7 @@ export default {
 * 使用Vite构建的项目，修改`vite.config.js`
 ```js
 // vite.config.js
-import federation from "@originjs/vite-plugin-federation";
+import federation from "@liuyang0826/vite-plugin-federation";
 export default {
     plugins: [
         federation({
@@ -96,7 +96,7 @@ export default {
 *  使用Rollup构建的项目，修改`rollup.config.js`
 ```js
 // rollup.config.js
-import federation from '@originjs/vite-plugin-federation'
+import federation from '@liuyang0826/vite-plugin-federation'
 export default {
     input: 'src/index.js',
     plugins: [

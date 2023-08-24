@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue2'
-import federation from '@originjs/vite-plugin-federation'
+import federation from '@liuyang0826/vite-plugin-federation'
 
 // https://vitejs.dev/config/
 export default defineConfig({

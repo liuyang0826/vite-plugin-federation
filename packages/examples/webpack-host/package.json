@@ -14,7 +14,7 @@
     "remote"
   ],
   "devDependencies": {
-    "@originjs/vite-plugin-federation": "workspace:*",
+    "@liuyang0826/vite-plugin-federation": "workspace:*",
     "kill-port": "^2.0.1"
   }
 }

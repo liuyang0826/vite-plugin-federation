@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import federation from '@originjs/vite-plugin-federation'
+import federation from '@liuyang0826/vite-plugin-federation'
 import autoprefixer from 'autoprefixer'
 
 // https://vitejs.dev/config/
