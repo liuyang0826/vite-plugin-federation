@@ -126,9 +126,9 @@ export default function federation(
         pluginHook.configResolved?.call(this, config)
       }
     },
-    buildStart(inputOptions) {
+    async buildStart(inputOptions) {
       for (const pluginHook of pluginList) {
-        pluginHook.buildStart?.call(this, inputOptions)
+        await pluginHook.buildStart?.call(this, inputOptions)
       }
     },
 
@@ -166,9 +166,9 @@ export default function federation(
       return null
     },
 
-    transform(code: string, id: string) {
+    async transform(code: string, id: string) {
       for (const pluginHook of pluginList) {
-        const result = pluginHook.transform?.call(this, code, id)
+        const result = await pluginHook.transform?.call(this, code, id)
         if (result) {
           return result
         }
