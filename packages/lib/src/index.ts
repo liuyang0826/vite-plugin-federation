@@ -61,7 +61,8 @@ export default function federation(
       pluginList = []
     }
     builderInfo.isHost = !!(
-      parsedOptions.prodRemote.length || parsedOptions.devRemote.length
+      (parsedOptions.prodRemote.length && !parsedOptions.prodExpose.length) ||
+      (parsedOptions.devRemote.length && !parsedOptions.devExpose.length)
     )
     builderInfo.isRemote = !!(
       parsedOptions.prodExpose.length || parsedOptions.devExpose.length

@@ -31,8 +31,6 @@ export function prodSharedPlugin(
   parsedOptions.prodShared.forEach((value) =>
     shareName2Prop.set(removeNonRegLetter(value[0], NAME_CHAR_REG), value[1])
   )
-  let isHost
-  let isRemote
   const id2Prop = new Map<string, any>()
 
   return {
@@ -41,10 +39,6 @@ export function prodSharedPlugin(
       __federation_fn_import: federation_fn_import
     },
     options(inputOptions) {
-      isRemote = !!parsedOptions.prodExpose.length
-      isHost =
-        !!parsedOptions.prodRemote.length && !parsedOptions.prodExpose.length
-
       if (shareName2Prop.size) {
         // remove item which is both in external and shared
         inputOptions.external = (inputOptions.external as [])?.filter(
@@ -74,7 +68,7 @@ export function prodSharedPlugin(
       const dirPaths: string[] = []
       const currentDir = resolve()
 
-      if (isHost) {
+      if (builderInfo.isHost) {
         //  try to get every module package.json file
         for (const arr of parsedOptions.prodShared) {
           if (!arr[1].version && !arr[1].manuallyPackagePathSetting) {
@@ -137,7 +131,7 @@ export function prodSharedPlugin(
         }
       }
 
-      if (parsedOptions.prodShared.length && isRemote) {
+      if (parsedOptions.prodShared.length && builderInfo.isRemote) {
         for (const prod of parsedOptions.prodShared) {
           id2Prop.set(prod[1].id, prod[1])
         }
@@ -187,14 +181,14 @@ export function prodSharedPlugin(
     },
 
     generateBundle(options, bundle) {
-      if (!isRemote) {
+      if (!builderInfo.isRemote) {
         return
       }
       const needRemoveShared = new Set<string>()
       for (const key in bundle) {
         const chunk = bundle[key]
         if (chunk.type === 'chunk') {
-          if (!isHost) {
+          if (!builderInfo.isHost) {
             const regRst = sharedFilePathReg.exec(chunk.fileName)
             if (regRst && shareName2Prop.get(regRst[1])?.generate === false) {
               needRemoveShared.add(key)

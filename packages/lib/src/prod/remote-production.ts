@@ -229,6 +229,10 @@ export function prodRemotePlugin(
           })
           return code.replace(getModuleMarker('shareScope'), res.join(','))
         }
+      } else {
+        if (id === '\0virtual:__federation__') {
+          return code.replace(getModuleMarker('shareScope'), '')
+        }
       }
 
       if (builderInfo.isHost || builderInfo.isShared) {
