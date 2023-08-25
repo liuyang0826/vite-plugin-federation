@@ -108,4 +108,40 @@ function importRef(source, varName) {
   return source[varName] ?? source.default?.[varName]
 }
 
-export { ensure, getRemote, setRemote, unwrapDefault, wrapDefault, importRef }
+function wrapRequire(target) {
+  if (!target) return target
+  const f = target.default
+  if (typeof f === 'function') {
+    const fn = function fn() {
+      if (this instanceof fn) {
+        return Reflect.construct(f, arguments, this.constructor)
+      }
+      return f.apply(this, arguments)
+    }
+    fn.prototype = f.prototype
+    return fn
+  }
+  const proxy = {}
+  new Set([
+    ...Object.keys(target),
+    ...(target.default ? Object.keys(target.default) : [])
+  ]).forEach((k) => {
+    Object.defineProperty(proxy, k, {
+      enumerable: true,
+      get: function () {
+        return importRef(target, k)
+      }
+    })
+  })
+  return proxy
+}
+
+export {
+  ensure,
+  getRemote,
+  setRemote,
+  unwrapDefault,
+  wrapDefault,
+  importRef,
+  wrapRequire
+}

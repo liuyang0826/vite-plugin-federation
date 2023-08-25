@@ -47,8 +47,5 @@ async function getSharedFromLocal(name) {
     )
   }
 }
-export {
-  importShared,
-  getSharedFromRuntime as importSharedRuntime,
-  getSharedFromLocal as importSharedLocal
-}
+
+export { importShared }

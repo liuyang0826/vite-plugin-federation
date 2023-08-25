@@ -23,3 +23,4 @@ export const DEFAULT_TRANSFORM_FILE_TYPES = [
 export const sharedFilePathReg = /__federation_shared_(.+)\.js$/
 export const REMOTE_FROM_PARAMETER = 'remoteFrom'
 export const NAME_CHAR_REG = new RegExp('[0-9a-zA-Z@_-]+')
+export const COMMONJS_PROXY_SUFFIX = '?commonjs-proxy'

@@ -4,7 +4,6 @@
  */
 import { RenderedChunk } from 'rollup'
 import { ResolvedConfig, ViteDevServer, Plugin } from 'vite'
-import type { createFilter } from '@rollup/pluginutils'
 
 export default function federation(
   options: VitePluginFederationOptions

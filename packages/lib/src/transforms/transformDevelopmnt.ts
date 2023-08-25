@@ -1,5 +1,4 @@
 import type { TransformPluginContext } from 'rollup'
-import type { Context } from 'types'
 import { Remote } from '../utils'
 import traverse from '@babel/traverse'
 import type { ParseResult } from '@babel/parser'

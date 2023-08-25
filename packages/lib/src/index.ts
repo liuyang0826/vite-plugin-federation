@@ -129,7 +129,7 @@ export default function federation(
           return transformFederationProd.call(this, context, code)
         }
         if (context.isHost || context.isShared) {
-          return transfromProduction(context, code, remotes)
+          return transfromProduction.call(this, context, code, remotes, id)
         }
       },
       outputOptions(outputOption) {
