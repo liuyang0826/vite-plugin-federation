@@ -1,4 +1,4 @@
-import { satisfy } from '__federation_fn_satisfy'
+import { satisfy } from '@liuyang0826/vite-plugin-federation/satisfy'
 
 // eslint-disable-next-line no-undef
 const moduleMap = __rf_var__moduleMap

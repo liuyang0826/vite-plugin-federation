@@ -3,8 +3,12 @@
  * MIT License https://github.com/webpack/webpack/LICENSE
  */
 import { RenderedChunk } from 'rollup'
+import { ResolvedConfig, ViteDevServer, Plugin } from 'vite'
+import type { createFilter } from '@rollup/pluginutils'
 
-export default function federation(options: VitePluginFederationOptions): Plugin
+export default function federation(
+  options: VitePluginFederationOptions
+): Plugin[]
 
 declare interface VitePluginFederationOptions {
   /**
@@ -311,4 +315,19 @@ declare interface SharedConfig {
    * determine whether to include the shared in the chunk, true is included, false will not generate a shared chunk, only the remote side of the parameter is valid, the host side will definitely generate a shared chunk
    */
   generate?: boolean
+}
+
+declare interface Context {
+  shared: (string | ConfigTypeSet)[]
+  expose: (string | ConfigTypeSet)[]
+  remote: (string | ConfigTypeSet)[]
+  isHost: boolean
+  isRemote: boolean
+  isShared: boolean
+  builder: string
+  assetsDir: string
+  exposesKeyMap: Map<string, string>
+  shareName2Prop: Map<string, any>
+  viteConfigResolved: ResolvedConfig
+  viteDevServer: ViteDevServer
 }

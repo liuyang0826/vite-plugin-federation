@@ -1,213 +1,172 @@
-// *****************************************************************************
-// Copyright (C) 2022 Origin.js and others.
-//
-// This program and the accompanying materials are licensed under Mulan PSL v2.
-// You can use this software according to the terms and conditions of the Mulan PSL v2.
-// You may obtain a copy of Mulan PSL v2 at:
-//          http://license.coscl.org.cn/MulanPSL2
-// THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-// EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-// MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-// See the Mulan PSL v2 for more details.
-//
-// SPDX-License-Identifier: MulanPSL-2.0
-// *****************************************************************************
-
-import type {
-  ConfigEnv,
-  Plugin,
-  UserConfig,
-  ViteDevServer,
-  ResolvedConfig
-} from 'vite'
-import virtual from '@rollup/plugin-virtual'
-import { dirname } from 'path'
-import { prodRemotePlugin } from './prod/remote-production'
-import type { VitePluginFederationOptions } from '../types'
-import { builderInfo, DEFAULT_ENTRY_FILENAME, parsedOptions } from './public'
-import type { PluginHooks } from '../types/pluginHooks'
-import type { ModuleInfo } from 'rollup'
-import { prodSharedPlugin } from './prod/shared-production'
-import { prodExposePlugin } from './prod/expose-production'
-import { devSharedPlugin } from './dev/shared-development'
-import { devRemotePlugin } from './dev/remote-development'
-import { devExposePlugin } from './dev/expose-development'
-
+import type { Plugin } from 'vite'
+import {
+  DEFAULT_ENTRY_FILENAME,
+  DEFAULT_PROMIESE_EXPORT_NAME,
+  DEFAULT_TRANSFORM_FILE_TYPES
+} from './constants'
+import {
+  parseExposeOptions,
+  parseRemoteOptions,
+  parseSharedOptions
+} from './utils/parseOptions'
+import { Remote } from './utils'
+import createVirtual from './virtual/createVirtual'
+import transformFederationProd from './transforms/transformFederationProd'
+import transformFederationFnImport from './transforms/transformFederationFnImport'
+import transfromProduction from './transforms/transfromProduction'
+import {
+  resolveBuildVersion,
+  resolveServeVersion
+} from './utils/resolveVersion'
+import emitFiles from './utils/emitFiles'
+import processExternal from './utils/processExternal'
+import generateShared from './generateBundle/generateShared'
+import generateExpose from './generateBundle/generateExpose'
+import { createFilter } from '@rollup/pluginutils'
+import { Context, VitePluginFederationOptions } from 'types'
+import transformDevelopmnt from './transforms/transformDevelopmnt'
+import { transformFederationDev } from './transforms/transformFederationDev'
+import { defu } from 'defu'
 export default function federation(
   options: VitePluginFederationOptions
-): Plugin {
-  options.filename = options.filename
-    ? options.filename
-    : DEFAULT_ENTRY_FILENAME
+): Plugin[] {
+  options.filename = options.filename ?? DEFAULT_ENTRY_FILENAME
+  options.promiseExportName =
+    options.promiseExportName ?? DEFAULT_PROMIESE_EXPORT_NAME
 
-  let pluginList: PluginHooks[] = []
-  let virtualMod
-  let registerCount = 0
+  const context = {
+    expose: parseExposeOptions(options),
+    shared: parseSharedOptions(options),
+    remote: parseRemoteOptions(options)
+  } as Context
 
-  function registerPlugins(mode: string, command: string) {
-    if (mode === 'development' || command === 'serve') {
-      pluginList = [
-        devSharedPlugin(options),
-        devExposePlugin(options),
-        devRemotePlugin(options)
-      ]
-    } else if (mode === 'production' || command === 'build') {
-      pluginList = [
-        prodSharedPlugin(options),
-        prodExposePlugin(options),
-        prodRemotePlugin(options)
-      ]
-    } else {
-      pluginList = []
-    }
-    builderInfo.isHost = !!(
-      (parsedOptions.prodRemote.length && !parsedOptions.prodExpose.length) ||
-      (parsedOptions.devRemote.length && !parsedOptions.devExpose.length)
-    )
-    builderInfo.isRemote = !!(
-      parsedOptions.prodExpose.length || parsedOptions.devExpose.length
-    )
-    builderInfo.isShared = !!(
-      parsedOptions.prodShared.length || parsedOptions.devShared.length
-    )
+  context.isHost = !!(context.remote.length || context.expose.length)
+  context.isRemote = !!context.expose.length
+  context.isShared = !!context.shared.length
+  const filter = createFilter(
+    options.transformFileTypes ?? DEFAULT_TRANSFORM_FILE_TYPES
+  )
 
-    let virtualFiles = {}
-    pluginList.forEach((plugin) => {
-      if (plugin.virtualFile) {
-        virtualFiles = Object.assign(virtualFiles, plugin.virtualFile)
-      }
+  const remotes: Remote[] = []
+  for (const item of context.remote) {
+    remotes.push({
+      id: item[0],
+      regexp: new RegExp(`^${item[0]}/.+?`),
+      config: item[1]
     })
-    virtualMod = virtual(virtualFiles)
   }
 
-  return {
-    name: 'originjs:federation',
-    // for scenario vite.config.js build.cssCodeSplit: false
-    // vite:css-post plugin will summarize all the styles in the style.xxxxxx.css file
-    // so, this plugin need run after vite:css-post in post plugin list
-    enforce: 'post',
-    // apply:'build',
-    options(_options) {
-      // rollup doesnt has options.mode and options.command
-      if (!registerCount++) {
-        registerPlugins((options.mode = options.mode ?? 'production'), '')
-      }
-
-      if (typeof _options.input === 'string') {
-        _options.input = { index: _options.input }
-      }
-      _options.external = _options.external || []
-      if (!Array.isArray(_options.external)) {
-        _options.external = [_options.external as string]
-      }
-      for (const pluginHook of pluginList) {
-        pluginHook.options?.call(this, _options)
-      }
-      return _options
-    },
-    config(config: UserConfig, env: ConfigEnv) {
-      options.mode = options.mode ?? env.mode
-      registerPlugins(options.mode, env.command)
-      registerCount++
-      for (const pluginHook of pluginList) {
-        pluginHook.config?.call(this, config, env)
-      }
-
-      // only run when builder is vite,rollup doesnt has hook named `config`
-      builderInfo.builder = 'vite'
-      builderInfo.assetsDir = config?.build?.assetsDir ?? 'assets'
-    },
-    configureServer(server: ViteDevServer) {
-      for (const pluginHook of pluginList) {
-        pluginHook.configureServer?.call(this, server)
-      }
-    },
-    configResolved(config: ResolvedConfig) {
-      for (const pluginHook of pluginList) {
-        pluginHook.configResolved?.call(this, config)
-      }
-    },
-    async buildStart(inputOptions) {
-      for (const pluginHook of pluginList) {
-        await pluginHook.buildStart?.call(this, inputOptions)
-      }
-    },
-
-    async resolveId(...args) {
-      const v = virtualMod.resolveId.call(this, ...args)
-      if (v) {
-        return v
-      }
-      if (args[0] === '\0virtual:__federation_fn_import') {
-        return {
-          id: '\0virtual:__federation_fn_import',
-          moduleSideEffects: true
+  return [
+    createVirtual(context, options, remotes),
+    {
+      name: 'federation:prepare',
+      options(_options) {
+        if (typeof _options.input === 'string') {
+          _options.input = { index: _options.input }
         }
-      }
-      if (args[0] === '__federation_fn_satisfy') {
-        const federationId = (
-          await this.resolve('@liuyang0826/vite-plugin-federation')
-        )?.id
-        return await this.resolve(`${dirname(federationId!)}/satisfy.mjs`)
-      }
-      if (args[0] === '~federation') {
-        return {
-          id: '\0virtual:__federation__',
-          moduleSideEffects: true
+        _options.external = _options.external || []
+        if (!Array.isArray(_options.external)) {
+          _options.external = [_options.external as string]
         }
-      }
-      return null
-    },
-
-    load(...args) {
-      const v = virtualMod.load.call(this, ...args)
-      if (v) {
-        return v
-      }
-      return null
-    },
-
-    async transform(code: string, id: string) {
-      for (const pluginHook of pluginList) {
-        const result = await pluginHook.transform?.call(this, code, id)
-        if (result) {
-          return result
+        return processExternal(context, _options)
+      },
+      configResolved(config) {
+        // only run when builder is vite,rollup doesnt has hook named `configResolved`
+        context.assetsDir = config.build.assetsDir
+        context.viteConfigResolved = config
+      },
+      async resolveId(...args) {
+        if (args[0] === '~federation') {
+          return '\0virtual:__federation__'
         }
-      }
-      return code
-    },
-    moduleParsed(moduleInfo: ModuleInfo): void {
-      for (const pluginHook of pluginList) {
-        pluginHook.moduleParsed?.call(this, moduleInfo)
+        return null
       }
     },
-
-    outputOptions(outputOptions) {
-      for (const pluginHook of pluginList) {
-        pluginHook.outputOptions?.call(this, outputOptions)
-      }
-      return outputOptions
-    },
-
-    renderChunk(code, chunkInfo, _options) {
-      for (const pluginHook of pluginList) {
-        const result = pluginHook.renderChunk?.call(
-          this,
-          code,
-          chunkInfo,
-          _options
-        )
-        if (result) {
-          return result
+    {
+      name: 'federation:serve',
+      enforce: 'post',
+      apply: 'serve',
+      config(config) {
+        // need to include remotes in the optimizeDeps.exclude
+        if (context.remote.length) {
+          return defu(config, {
+            optimizeDeps: {
+              exclude: context.remote.map((item) => item[0])
+            }
+          })
         }
+      },
+      configureServer(server) {
+        // get moduleGraph for dev mode dynamic reference
+        context.viteDevServer = server
+      },
+      async transform(code, id) {
+        if (id === '\0virtual:__federation__') {
+          return transformFederationDev.call(this, context, code)
+        }
+        // ignore some not need to handle file types
+        if (filter(id)) {
+          return await transformDevelopmnt.call(this, code, remotes)
+        }
+      },
+      async buildStart() {
+        await resolveServeVersion.call(this, context)
       }
-      return null
     },
+    {
+      name: 'federation:build',
+      enforce: 'post',
+      apply: 'build',
+      async buildStart() {
+        await resolveBuildVersion.call(this, context)
+        emitFiles.call(this, context, options)
+      },
+      transform(code, id) {
+        if (context.isShared && id === '\0virtual:__federation_fn_import') {
+          return transformFederationFnImport.call(this, context, code)
+        }
+        if (context.isHost && id === '\0virtual:__federation__') {
+          return transformFederationProd.call(this, context, code)
+        }
+        if (context.isHost || context.isShared) {
+          return transfromProduction(context, code, remotes)
+        }
+      },
+      outputOptions(outputOption) {
+        // remove rollup generated empty imports,like import './filename.js'
+        outputOption.hoistTransitiveImports = false
 
-    generateBundle: function (_options, bundle, isWrite) {
-      for (const pluginHook of pluginList) {
-        pluginHook.generateBundle?.call(this, _options, bundle, isWrite)
+        const manualChunkFunc = (id: string) => {
+          //  if id is in shared dependencies, return id ,else return vite function value
+          const find = context.shared.find((arr) =>
+            arr[1].dependencies?.has(id)
+          )
+          return find ? find[0] : undefined
+        }
+
+        // only active when manualChunks is function,array not to solve
+        if (typeof outputOption.manualChunks === 'function') {
+          outputOption.manualChunks = new Proxy(outputOption.manualChunks, {
+            apply(target, _, argArray) {
+              const result = manualChunkFunc(argArray[0])
+              return result ? result : target(argArray[0], argArray[1])
+            }
+          })
+        }
+
+        // The default manualChunk function is no longer available from vite 2.9.0
+        if (outputOption.manualChunks === undefined) {
+          outputOption.manualChunks = manualChunkFunc
+        }
+
+        return outputOption
+      },
+      generateBundle(_, bundle) {
+        if (context.isRemote) {
+          generateShared(context, bundle)
+        }
+        generateExpose.call(this, context, bundle)
       }
     }
-  }
+  ]
 }

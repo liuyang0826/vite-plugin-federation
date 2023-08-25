@@ -2,6 +2,8 @@
 import { ref } from 'vue';
 import { allRecommendations } from '../recos'
 import { currentItemStore } from '../store'
+import GameControllerOutline from '@vicons/ionicons5/GameControllerOutline'
+
 
 const recommendations = ref<Array<{ image: string; id: string }>>([])
 recommendations.value = allRecommendations['porsche']
@@ -18,6 +20,7 @@ store.$subscribe((mutation, state) => {
     <h3>Related Products</h3>
     <img v-for="recommendation in recommendations" :key="recommendation.id" :src="recommendation.image"
       :alt="`Recommendation`+recommendation.id" />
+    <GameControllerOutline />
   </div>
 </template>
 

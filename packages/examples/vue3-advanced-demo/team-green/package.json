@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 5001 --strictPort",
-    "build": "vue-tsc --noEmit && vite build",
+    "build": "vue-tsc --noEmit && vite build --emptyOutDir",
     "serve": "vite preview --port 5001 --strictPort",
     "clean": "rm -rf dist",
     "stop": "kill-port --port 5001"
