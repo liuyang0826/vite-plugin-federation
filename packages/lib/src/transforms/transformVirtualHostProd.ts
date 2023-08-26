@@ -16,8 +16,8 @@ export default function transformVirtualHostProd(
     if (typeof obj === 'object') {
       const fileName = `./${basename(this.getFileName(obj.emitFile))}`
       str += `get: () => get('${fileName}', ${REMOTE_FROM_PARAMETER}), loaded: 1`
-      res.push(`'${arr[0]}':{'${obj.version}':{${str}}}`)
+      res.push(`'${arr[0]}':{ '${obj.version}':{ ${str} } }`)
     }
   })
-  return code.replace(getModuleMarker('shareScope'), res.join(','))
+  return code.replace(getModuleMarker('shareScope'), res.join(',\n    '))
 }

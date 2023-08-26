@@ -28,7 +28,7 @@ const wrapShareModule = (REMOTE_FROM_PARAMETER) => {
 }
 
 async function __federation_import(name) {
-  return import(name)
+  return import(/* @vite-ignore */ name)
 }
 
 const initMap = Object.create(null)
