@@ -20,7 +20,7 @@ export default function generateExpose(
   let remoteEntryChunk: OutputChunk | null = null
   for (const file in bundle) {
     const chunk = bundle[file] as OutputChunk
-    if (chunk?.facadeModuleId === '\0virtual:__remoteEntryHelper__') {
+    if (chunk?.facadeModuleId === '\0virtual:__federation_remote') {
       remoteEntryChunk = chunk
       break
     }

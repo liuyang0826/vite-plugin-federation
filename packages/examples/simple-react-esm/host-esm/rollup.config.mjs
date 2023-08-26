@@ -2,7 +2,7 @@ import babel from '@rollup/plugin-babel'
 import commonjs from '@rollup/plugin-commonjs'
 import resolve from '@rollup/plugin-node-resolve'
 import federation from '@liuyang0826/vite-plugin-federation'
-import pkg from './package.json' assert { type: 'json' }
+// import pkg from './package.json' assert { type: 'json' }
 import replace from '@rollup/plugin-replace'
 
 export default {
@@ -24,18 +24,18 @@ export default {
       shared: {
         react: {
           singleton: true,
-          requiredVersion: pkg.dependencies.react,
-          version: '16.13.1',
+          // requiredVersion: pkg.dependencies.react,
+          // version: '16.13.1',
         },
         'react-dom': {
           singleton: true,
-          requiredVersion: pkg.dependencies['react-dom'],
+          // requiredVersion: pkg.dependencies['react-dom'],
         }
       }
     })
   ],
   output: {
     format: 'esm',
-    dir: pkg.main,
+    dir: "dist",
   },
 }

@@ -4,7 +4,7 @@ import type { TransformPluginContext } from 'rollup'
 import { getModuleMarker } from '../utils'
 import { REMOTE_FROM_PARAMETER } from '../constants'
 
-export default function transformFederationProd(
+export default function transformVirtualHostProd(
   this: TransformPluginContext,
   context: Context,
   code: string

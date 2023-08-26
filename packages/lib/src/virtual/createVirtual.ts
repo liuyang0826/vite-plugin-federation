@@ -1,7 +1,7 @@
 import virtual from '@rollup/plugin-virtual'
-import federation from './federation.js?raw'
-import federation_fn_import from './federationFnImport.js?raw'
-import remoteEntryHelper from './remoteEntryHelper.js?raw'
+import host from './host.js?raw'
+import shared from './shared.js?raw'
+import remote from './remote.js?raw'
 import {
   Remote,
   createRemotesMap,
@@ -23,18 +23,18 @@ export default function createVirtual(
   options: VitePluginFederationOptions,
   remotes: Remote[]
 ) {
-  let __federation__ = `${createRemotesMap(remotes)}\n${federation.replace(
+  let __federation_host = `${createRemotesMap(remotes)}\n${host.replace(
     /REMOTE_FROM_PARAMETER/g,
     REMOTE_FROM_PARAMETER
   )}`
   if (context.isHost) {
-    __federation__ = __federation__.replace(
+    __federation_host = __federation_host.replace(
       "// getModuleMarker('shareScope')",
       getModuleMarker('shareScope')
     )
   }
 
-  let __remoteEntryHelper__ = remoteEntryHelper
+  let __federation_remote = remote
   let moduleMap = ''
   // exposes module
   const exposesKeyMap = (context.exposesKeyMap = new Map())
@@ -49,15 +49,15 @@ export default function createVirtual(
         return __federation_import('\${__federation_expose_${item[0]}}').then(module => () => module)},`
   }
 
-  __remoteEntryHelper__ = __remoteEntryHelper__
+  __federation_remote = __federation_remote
     .replace('// moduleMap', moduleMap)
     .replace('DYNAMIC_LOADING_CSS', DYNAMIC_LOADING_CSS)
     .replace('options.filename', options.filename as string)
     .replace('options.promiseExportName', options.promiseExportName as string)
 
   return virtual({
-    __federation__: __federation__,
-    __federation_fn_import: federation_fn_import,
-    __remoteEntryHelper__: __remoteEntryHelper__
+    __federation_host: __federation_host,
+    __federation_shared: shared,
+    __federation_remote: __federation_remote
   })
 }

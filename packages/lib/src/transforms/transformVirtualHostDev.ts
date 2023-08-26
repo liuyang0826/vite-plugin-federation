@@ -4,7 +4,7 @@ import { getModuleMarker } from '../utils'
 import type { Context } from 'types'
 import { REMOTE_FROM_PARAMETER } from '../constants'
 
-export async function transformFederationDev(
+export default async function transformVirtualHostDev(
   this: TransformPluginContext,
   context: Context,
   code: string

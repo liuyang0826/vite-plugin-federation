@@ -3,7 +3,7 @@ import commonjs from '@rollup/plugin-commonjs'
 import resolve from '@rollup/plugin-node-resolve'
 import federation from '@liuyang0826/vite-plugin-federation'
 import replace from '@rollup/plugin-replace'
-import pkg from './package.json' assert { type: 'json' }
+// import pkg from './package.json' assert { type: 'json' }
 
 export default {
   input: 'src/index.js',
@@ -26,7 +26,7 @@ export default {
           react: {
           },
           'react-dom': {
-            requiredVersion: pkg.dependencies['react-dom'],
+            // requiredVersion: pkg.dependencies['react-dom'],
             import: false
           }
         }
@@ -35,7 +35,7 @@ export default {
   ],
   output: {
     format: 'esm',
-    dir: pkg.main,
+    dir: "dist",
     // minifyInternalExports:false
   },
   // external: ['react', 'react-dom'],

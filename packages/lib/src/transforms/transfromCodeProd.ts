@@ -10,7 +10,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { COMMONJS_PROXY_SUFFIX } from '../constants'
 import type { TransformPluginContext } from 'rollup'
 
-export default async function transfromProduction(
+export default async function transfromCodeProd(
   this: TransformPluginContext,
   context: Context,
   code: string,
@@ -385,13 +385,13 @@ export default async function transfromProduction(
 
   if (requiresRuntime) {
     magicString.prepend(
-      `import { ensure as __federation_method_ensure, getRemote as __federation_method_getRemote, wrapDefault as __federation_method_wrapDefault, unwrapDefault as __federation_method_unwrapDefault, importRef as __federation_method_importRef, wrapRequire as __federation_method_wrapRequire } from '__federation__';\n`
+      `import { ensure as __federation_method_ensure, getRemote as __federation_method_getRemote, wrapDefault as __federation_method_wrapDefault, unwrapDefault as __federation_method_unwrapDefault, importRef as __federation_method_importRef, wrapRequire as __federation_method_wrapRequire } from '__federation_host';\n`
     )
   }
 
   if (hasImportShared) {
     magicString.prepend(
-      `import { importShared as __federation_method_importShared } from '__federation_fn_import';\n`
+      `import { importShared as __federation_method_importShared } from '__federation_shared';\n`
     )
   }
 

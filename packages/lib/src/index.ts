@@ -11,9 +11,11 @@ import {
 } from './utils/parseOptions'
 import { Remote } from './utils'
 import createVirtual from './virtual/createVirtual'
-import transformFederationProd from './transforms/transformFederationProd'
-import transformFederationFnImport from './transforms/transformFederationFnImport'
-import transfromProduction from './transforms/transfromProduction'
+import transformVirtualHostProd from './transforms/transformVirtualHostProd'
+import transformVirtualHostDev from './transforms/transformVirtualHostDev'
+import transformVirtualShared from './transforms/transformVirtualShared'
+import transfromCodeProd from './transforms/transfromCodeProd'
+import transformCodeDev from './transforms/transformCodeDev'
 import {
   resolveBuildVersion,
   resolveServeVersion
@@ -24,8 +26,6 @@ import generateShared from './generateBundle/generateShared'
 import generateExpose from './generateBundle/generateExpose'
 import { createFilter } from '@rollup/pluginutils'
 import { Context, VitePluginFederationOptions } from 'types'
-import transformDevelopmnt from './transforms/transformDevelopmnt'
-import { transformFederationDev } from './transforms/transformFederationDev'
 import { defu } from 'defu'
 export default function federation(
   options: VitePluginFederationOptions
@@ -37,7 +37,8 @@ export default function federation(
   const context = {
     expose: parseExposeOptions(options),
     shared: parseSharedOptions(options),
-    remote: parseRemoteOptions(options)
+    remote: parseRemoteOptions(options),
+    builder: 'rollup'
   } as Context
 
   context.isHost = !!(context.remote.length || context.expose.length)
@@ -74,10 +75,11 @@ export default function federation(
         // only run when builder is vite,rollup doesnt has hook named `configResolved`
         context.assetsDir = config.build.assetsDir
         context.viteConfigResolved = config
+        context.builder = 'vite'
       },
       async resolveId(...args) {
         if (args[0] === '~federation') {
-          return '\0virtual:__federation__'
+          return '\0virtual:__federation_host'
         }
         return null
       }
@@ -101,15 +103,17 @@ export default function federation(
         context.viteDevServer = server
       },
       async transform(code, id) {
-        if (id === '\0virtual:__federation__') {
-          return transformFederationDev.call(this, context, code)
+        if (context.builder === 'rollup') return
+        if (id === '\0virtual:__federation_host') {
+          return transformVirtualHostDev.call(this, context, code)
         }
         // ignore some not need to handle file types
         if (filter(id)) {
-          return await transformDevelopmnt.call(this, code, remotes)
+          return await transformCodeDev.call(this, code, remotes)
         }
       },
       async buildStart() {
+        if (context.builder === 'rollup') return
         await resolveServeVersion.call(this, context)
       }
     },
@@ -122,14 +126,14 @@ export default function federation(
         emitFiles.call(this, context, options)
       },
       transform(code, id) {
-        if (context.isShared && id === '\0virtual:__federation_fn_import') {
-          return transformFederationFnImport.call(this, context, code)
+        if (context.isShared && id === '\0virtual:__federation_shared') {
+          return transformVirtualShared.call(this, context, code)
         }
-        if (context.isHost && id === '\0virtual:__federation__') {
-          return transformFederationProd.call(this, context, code)
+        if (context.isHost && id === '\0virtual:__federation_host') {
+          return transformVirtualHostProd.call(this, context, code)
         }
         if (context.isHost || context.isShared) {
-          return transfromProduction.call(this, context, code, remotes, id)
+          return transfromCodeProd.call(this, context, code, remotes, id)
         }
       },
       outputOptions(outputOption) {

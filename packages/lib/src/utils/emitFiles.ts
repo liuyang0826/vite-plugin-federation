@@ -25,7 +25,7 @@ export default function emitFiles(
         options.filename
       }`,
       type: 'chunk',
-      id: '__remoteEntryHelper__',
+      id: '__federation_remote',
       preserveSignature: 'strict'
     })
   }

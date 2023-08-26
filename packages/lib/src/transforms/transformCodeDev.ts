@@ -6,7 +6,7 @@ import type { File } from '@babel/types'
 import { parse } from '@babel/parser'
 import MagicString from 'magic-string'
 
-export default async function transformDevelopmnt(
+export default async function transformCodeDev(
   this: TransformPluginContext,
   code: string,
   remotes: Remote[]
@@ -212,7 +212,7 @@ export default async function transformDevelopmnt(
 
   if (requiresRuntime) {
     magicString.prepend(
-      `import { ensure as __federation_method_ensure, getRemote as __federation_method_getRemote, wrapDefault as __federation_method_wrapDefault, unwrapDefault as __federation_method_unwrapDefault, importRef as __federation_method_importRef } from '__federation__';\n\n`
+      `import { ensure as __federation_method_ensure, getRemote as __federation_method_getRemote, wrapDefault as __federation_method_wrapDefault, unwrapDefault as __federation_method_unwrapDefault, importRef as __federation_method_importRef } from '__federation_host';\n\n`
     )
   }
   return magicString.toString()

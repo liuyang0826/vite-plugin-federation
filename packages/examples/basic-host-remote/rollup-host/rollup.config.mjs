@@ -1,7 +1,5 @@
 import federation from "@liuyang0826/vite-plugin-federation";
 
-import pkg from "./package.json" assert { type: "json" };
-
 export default {
   input: "src/index.js",
   preserveEntrySignatures: false,
@@ -12,5 +10,5 @@ export default {
       }
     }),
   ],
-  output: [{ format: "esm", dir: pkg.main }],
+  output: [{ format: "esm", dir: "dist" }],
 };

@@ -323,7 +323,7 @@ declare interface Context {
   isHost: boolean
   isRemote: boolean
   isShared: boolean
-  builder: string
+  builder: 'vite' | 'rollup'
   assetsDir: string
   exposesKeyMap: Map<string, string>
   shareName2Prop: Map<string, any>

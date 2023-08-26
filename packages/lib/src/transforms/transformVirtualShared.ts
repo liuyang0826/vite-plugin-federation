@@ -3,7 +3,7 @@ import type { Context } from 'types'
 import { basename } from 'node:path'
 import { getModuleMarker } from '../utils'
 
-export default function transformFederationFnImport(
+export default function transformVirtualShared(
   this: TransformPluginContext,
   context: Context,
   code: string
@@ -12,7 +12,7 @@ export default function transformFederationFnImport(
     .filter((shareInfo) => shareInfo[1].generate)
     .map(
       (sharedInfo) =>
-        `'${sharedInfo[0]}':{get:()=>()=>__federation_import('./${
+        `'${sharedInfo[0]}':{get: ()=> ()=> __federation_import('./${
           sharedInfo[1].root ? `${sharedInfo[1].root[0]}/` : ''
         }${basename(this.getFileName(sharedInfo[1].emitFile))}'),import:${
           sharedInfo[1].import
