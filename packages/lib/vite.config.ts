@@ -17,7 +17,6 @@ export default defineConfig({
         '@babel/traverse',
         '@babel/parser',
         'local-pkg',
-        '@rollup/pluginutils',
         '@rollup/plugin-virtual',
         'defu'
       ],

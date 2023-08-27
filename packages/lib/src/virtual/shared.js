@@ -1,16 +1,17 @@
 import { satisfy } from '@liuyang0826/vite-plugin-federation/satisfy'
+import { unwrapDefault } from '__federation_utils'
 
 // eslint-disable-next-line no-undef
 const moduleMap = __rf_var__moduleMap
 const moduleCache = Object.create(null)
-async function importShared(name, shareScope = 'default') {
+async function importShared(name, shareScope) {
   return moduleCache[name]
     ? new Promise((r) => r(moduleCache[name]))
     : (await getSharedFromRuntime(name, shareScope)) || getSharedFromLocal(name)
 }
 // eslint-disable-next-line
 async function __federation_import(name) {
-  return import(name)
+  return unwrapDefault(await import(/* @vite-ignore */ name))
 }
 async function getSharedFromRuntime(name, shareScope) {
   let module = null
@@ -47,5 +48,22 @@ async function getSharedFromLocal(name) {
     )
   }
 }
+async function importSharedDev(name, shareScope, get) {
+  return moduleCache[name]
+    ? new Promise((r) => r(moduleCache[name]))
+    : (await getSharedFromRuntime(name, shareScope)) ||
+        getSharedFromLocalDev(name, get)
+}
+async function getSharedFromLocalDev(name, get) {
+  if (moduleMap[name]?.import) {
+    let module = get()
+    moduleCache[name] = module
+    return module
+  } else {
+    console.error(
+      `consumer config import=false,so cant use callback shared module`
+    )
+  }
+}
 
-export { importShared }
+export { importShared, importSharedDev }

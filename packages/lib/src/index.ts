@@ -2,7 +2,7 @@ import type { Plugin } from 'vite'
 import {
   DEFAULT_ENTRY_FILENAME,
   DEFAULT_PROMIESE_EXPORT_NAME,
-  DEFAULT_TRANSFORM_FILE_TYPES
+  OPTIMIZE_SHARED_SUFFIX
 } from './constants'
 import {
   parseExposeOptions,
@@ -11,11 +11,9 @@ import {
 } from './utils/parseOptions'
 import { Remote } from './utils'
 import createVirtual from './virtual/createVirtual'
-import transformVirtualHostProd from './transforms/transformVirtualHostProd'
-import transformVirtualHostDev from './transforms/transformVirtualHostDev'
+import transformVirtualHost from './transforms/transformVirtualHost'
 import transformVirtualShared from './transforms/transformVirtualShared'
-import transfromCodeProd from './transforms/transfromCodeProd'
-import transformCodeDev from './transforms/transformCodeDev'
+import transformCode from './transforms/transformCode'
 import {
   resolveBuildVersion,
   resolveServeVersion
@@ -24,9 +22,10 @@ import emitFiles from './utils/emitFiles'
 import processExternal from './utils/processExternal'
 import generateShared from './generateBundle/generateShared'
 import generateExpose from './generateBundle/generateExpose'
-import { createFilter } from '@rollup/pluginutils'
 import { Context, VitePluginFederationOptions } from 'types'
 import { defu } from 'defu'
+import optimizeDepsPlugin from './transforms/optimizeDepsPlugin'
+
 export default function federation(
   options: VitePluginFederationOptions
 ): Plugin[] {
@@ -41,12 +40,9 @@ export default function federation(
     builder: 'rollup'
   } as Context
 
-  context.isHost = !!(context.remote.length || context.expose.length)
+  context.isHost = !!context.remote.length && !context.expose.length
   context.isRemote = !!context.expose.length
   context.isShared = !!context.shared.length
-  const filter = createFilter(
-    options.transformFileTypes ?? DEFAULT_TRANSFORM_FILE_TYPES
-  )
 
   const remotes: Remote[] = []
   for (const item of context.remote) {
@@ -57,8 +53,8 @@ export default function federation(
     })
   }
 
+  let virtual
   return [
-    createVirtual(context, options, remotes),
     {
       name: 'federation:prepare',
       options(_options) {
@@ -77,63 +73,83 @@ export default function federation(
         context.viteConfigResolved = config
         context.builder = 'vite'
       },
-      async resolveId(...args) {
+      resolveId(...args) {
         if (args[0] === '~federation') {
           return '\0virtual:__federation_host'
         }
-        return null
+        return virtual.resolveId.call(this, ...args)
+      },
+      load(...args) {
+        return virtual.load.call(this, ...args)
       }
     },
     {
       name: 'federation:serve',
-      enforce: 'post',
       apply: 'serve',
       config(config) {
         // need to include remotes in the optimizeDeps.exclude
-        if (context.remote.length) {
-          return defu(config, {
-            optimizeDeps: {
-              exclude: context.remote.map((item) => item[0])
-            }
-          })
+        const exclude = context.remote
+          .map((item) => item[0])
+          .concat('__federation_shared')
+        const plugins: any[] = []
+        let needsInterop: string[] = []
+        if (context.isRemote && context.isShared) {
+          exclude.push(
+            ...context.shared.map(
+              (item) => `${item[0]}${OPTIMIZE_SHARED_SUFFIX}`
+            )
+          )
+          needsInterop = context.shared.map((item) => item[0])
+          plugins.push(optimizeDepsPlugin(context))
         }
+        return defu(config, {
+          optimizeDeps: {
+            exclude: exclude,
+            esbuildOptions: { plugins },
+            needsInterop: needsInterop
+          }
+        })
       },
       configureServer(server) {
         // get moduleGraph for dev mode dynamic reference
         context.viteDevServer = server
-      },
-      async transform(code, id) {
-        if (context.builder === 'rollup') return
-        if (id === '\0virtual:__federation_host') {
-          return transformVirtualHostDev.call(this, context, code)
-        }
-        // ignore some not need to handle file types
-        if (filter(id)) {
-          return await transformCodeDev.call(this, code, remotes)
-        }
-      },
-      async buildStart() {
-        if (context.builder === 'rollup') return
-        await resolveServeVersion.call(this, context)
+        server.middlewares.use((req, res, next) => {
+          if (
+            req.url !==
+            `/${context.assetsDir ? context.assetsDir + '/' : ''}${
+              options.filename
+            }`
+          )
+            return next()
+          res.writeHead(302, {
+            Location: '/@id/__x00__virtual:__federation_remote',
+            'Access-Control-Allow-Origin': '*'
+          })
+          res.end()
+        })
       }
     },
     {
       name: 'federation:build',
       enforce: 'post',
-      apply: 'build',
       async buildStart() {
-        await resolveBuildVersion.call(this, context)
-        emitFiles.call(this, context, options)
+        virtual = createVirtual(context, options, remotes)
+        if (context.viteDevServer) {
+          await resolveServeVersion.call(this, context)
+        } else {
+          await resolveBuildVersion.call(this, context)
+          emitFiles.call(this, context, options)
+        }
       },
-      transform(code, id) {
+      async transform(code, id) {
         if (context.isShared && id === '\0virtual:__federation_shared') {
           return transformVirtualShared.call(this, context, code)
         }
         if (context.isHost && id === '\0virtual:__federation_host') {
-          return transformVirtualHostProd.call(this, context, code)
+          return transformVirtualHost.call(this, context, code)
         }
         if (context.isHost || context.isShared) {
-          return transfromCodeProd.call(this, context, code, remotes, id)
+          return transformCode.call(this, context, code, remotes, id)
         }
       },
       outputOptions(outputOption) {
@@ -166,7 +182,7 @@ export default function federation(
         return outputOption
       },
       generateBundle(_, bundle) {
-        if (context.isRemote) {
+        if (context.isRemote && context.isShared) {
           generateShared(context, bundle)
         }
         generateExpose.call(this, context, bundle)

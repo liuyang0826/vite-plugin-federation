@@ -17,10 +17,9 @@ export const DYNAMIC_LOADING_CSS = 'dynamicLoadingCss'
 export const DYNAMIC_LOADING_CSS_PREFIX = '__v__css__'
 export const DEFAULT_ENTRY_FILENAME = 'remoteEntry.js'
 export const DEFAULT_PROMIESE_EXPORT_NAME = '__tla'
-export const DEFAULT_TRANSFORM_FILE_TYPES = [
-  '**/*.{js,ts,jsx,tsx,mjs,cjs,vue,svelte}'
-]
 export const sharedFilePathReg = /__federation_shared_(.+)\.js$/
-export const REMOTE_FROM_PARAMETER = 'remoteFrom'
 export const NAME_CHAR_REG = new RegExp('[0-9a-zA-Z@_-]+')
 export const COMMONJS_PROXY_SUFFIX = '?commonjs-proxy'
+export const OPTIMIZE_SHARED_SUFFIX = '?federation_shared'
+export const OPTIMIZE_LOCAL_SUFFIX = '?federation_local'
+export const OPTIMIZE_DEPS_NAMESPACE = 'federation:optimize-deps'

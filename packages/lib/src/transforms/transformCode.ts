@@ -7,10 +7,15 @@ import MagicString from 'magic-string'
 import type { Remote } from '../utils'
 import { dirname, join } from 'node:path'
 import { existsSync, readFileSync } from 'node:fs'
-import { COMMONJS_PROXY_SUFFIX } from '../constants'
+import {
+  COMMONJS_PROXY_SUFFIX,
+  OPTIMIZE_DEPS_NAMESPACE,
+  OPTIMIZE_LOCAL_SUFFIX,
+  OPTIMIZE_SHARED_SUFFIX
+} from '../constants'
 import type { TransformPluginContext } from 'rollup'
 
-export default async function transfromCodeProd(
+export default async function transformCode(
   this: TransformPluginContext,
   context: Context,
   code: string,
@@ -31,26 +36,43 @@ export default async function transfromCodeProd(
   const hasStaticImported = new Map<string, string>()
   const sourceLocalNamesMap: Record<
     string,
-    { localName: string; isDefault: boolean; isRequire?: boolean }[]
+    { localName: string; isDefault: boolean }[]
   > = {}
-  let requiresRuntime = false
-  let hasImportShared = false
-  const modify = false
   const promises: Promise<void>[] = []
+  let hasGetRemote = false
+  let hasImportRef = false
+  let hasImportShared = false
+  const optimizeNodes: any[] = []
+
+  const optimizeDepsExclude = context.viteDevServer
+    ? context.viteConfigResolved.optimizeDeps.exclude ?? []
+    : []
 
   traverse.default(ast, {
     enter: ({ node }: any) => {
+      const leadingComment = node.leadingComments?.[0].value
+      if (
+        leadingComment &&
+        leadingComment.startsWith(` ${OPTIMIZE_DEPS_NAMESPACE}`) &&
+        !leadingComment.endsWith(OPTIMIZE_LOCAL_SUFFIX)
+      ) {
+        optimizeNodes.push(node)
+        return
+      }
+
       if (
         node.type !== 'ImportDeclaration' &&
         node.type !== 'ExportNamedDeclaration'
       ) {
         return
       }
+
       let moduleId = node.source?.value
       if (!moduleId) return
 
       promises.push(
         Promise.resolve().then(async () => {
+          let isOptimize = false
           let isRequire = false
           if (moduleId.endsWith(COMMONJS_PROXY_SUFFIX)) {
             try {
@@ -75,6 +97,9 @@ export default async function transfromCodeProd(
             } catch {
               /* noop */
             }
+          } else if (moduleId.endsWith(OPTIMIZE_SHARED_SUFFIX)) {
+            moduleId = moduleId.slice(0, -OPTIMIZE_SHARED_SUFFIX.length)
+            isOptimize = true
           }
 
           if (moduleId.indexOf('/') > -1) {
@@ -84,7 +109,6 @@ export default async function transfromCodeProd(
                 /[@/\\.-]/g,
                 ''
               )}`
-              requiresRuntime = true
               const modName = `.${moduleId.slice(remote.id.length)}`
               switch (node.type) {
                 case 'ImportDeclaration': {
@@ -97,6 +121,7 @@ export default async function transfromCodeProd(
                         remote.id
                       )} , ${JSON.stringify(modName)});`
                     )
+                    hasGetRemote = true
                   } else {
                     magicString.overwrite(node.start, node.end, '')
                   }
@@ -144,6 +169,7 @@ export default async function transfromCodeProd(
                         remote.id
                       )} , ${JSON.stringify(modName)});`
                     )
+                    hasGetRemote = true
                   } else {
                     magicString.overwrite(node.start, node.end, '')
                   }
@@ -179,7 +205,17 @@ export default async function transfromCodeProd(
             }
           }
 
-          if (context.shared.some((sharedInfo) => sharedInfo[0] === moduleId)) {
+          const shared = context.shared.find(
+            (sharedInfo) => sharedInfo[0] === moduleId
+          )
+
+          if (
+            shared &&
+            (!context.viteDevServer ||
+              isOptimize ||
+              isRequire ||
+              optimizeDepsExclude.includes(moduleId))
+          ) {
             const afterImportName = `__federation_var_${moduleId.replace(
               /[@/\\.-]/g,
               ''
@@ -199,16 +235,14 @@ export default async function transfromCodeProd(
                     if (spec.type === 'ImportDefaultSpecifier') {
                       sourceLocalNamesMap[afterImportName].push({
                         localName: spec.local.name,
-                        isDefault: true,
-                        isRequire
+                        isDefault: true
                       })
                     } else if (spec.type === 'ImportSpecifier') {
                       //  like import {a as b} from 'lib'
                       const localName = spec.local.name
                       sourceLocalNamesMap[afterImportName].push({
                         localName: localName,
-                        isDefault: false,
-                        isRequire
+                        isDefault: false
                       })
                       magicString.appendRight(
                         node.end,
@@ -218,25 +252,17 @@ export default async function transfromCodeProd(
                       //  like import * as a from 'lib'
                       sourceLocalNamesMap[afterImportName].push({
                         localName: spec.local.name,
-                        isDefault: true,
-                        isRequire
+                        isDefault: true
                       })
                     }
                   })
                 }
                 if (!hasStaticImported.has(moduleId)) {
                   hasStaticImported.set(moduleId, afterImportName)
-                  if (isRequire) {
-                    const line = `const ${afterImportName} = __federation_method_wrapRequire(await __federation_method_importShared(${JSON.stringify(
-                      moduleId
-                    )}));\n`
-                    magicString.overwrite(node.start, node.end, line)
-                  } else {
-                    const line = `const ${afterImportName} = await __federation_method_importShared(${JSON.stringify(
-                      moduleId
-                    )});\n`
-                    magicString.overwrite(node.start, node.end, line)
-                  }
+                  const line = `const ${afterImportName} = await __federation_method_importShared(${JSON.stringify(
+                    moduleId
+                  )}, ${JSON.stringify(shared[1].shareScope)});\n`
+                  magicString.overwrite(node.start, node.end, line)
                   hasImportShared = true
                 } else {
                   magicString.overwrite(node.start, node.end, '')
@@ -249,9 +275,9 @@ export default async function transfromCodeProd(
                   magicString.overwrite(
                     node.start,
                     node.end,
-                    `const ${afterImportName} = __federation_method_importShared(${JSON.stringify(
+                    `const ${afterImportName} = await __federation_method_importShared(${JSON.stringify(
                       moduleId
-                    )})`
+                    )}, ${JSON.stringify(shared[1].shareScope)})`
                   )
                   hasImportShared = true
                 } else {
@@ -291,30 +317,45 @@ export default async function transfromCodeProd(
       )
     },
     Import({ container }) {
-      const moduleId = container.arguments[0].value
+      let moduleId = container.arguments[0].value
       if (!moduleId) return
+
+      let isOptimize = false
+      if (moduleId.endsWith(OPTIMIZE_SHARED_SUFFIX)) {
+        moduleId = moduleId.slice(0, -OPTIMIZE_SHARED_SUFFIX.length)
+        isOptimize = true
+      }
+
       if (moduleId.indexOf('/') > -1) {
         const remote = remotes.find((r) => r.regexp.test(moduleId))
         if (remote) {
-          requiresRuntime = true
-          const needWrap = remote.config.from === 'vite'
           const modName = `.${moduleId.slice(remote.id.length)}`
           magicString.overwrite(
             container.start,
             container.end,
             `__federation_method_getRemote(${JSON.stringify(
               remote.id
-            )} , ${JSON.stringify(
-              modName
-            )}).then(module=>__federation_method_wrapDefault(module, ${needWrap}))`
+            )} , ${JSON.stringify(modName)})`
           )
+          hasGetRemote = true
         }
       }
-      if (context.shared.some((sharedInfo) => sharedInfo[0] === moduleId)) {
+      const shared = context.shared.find(
+        (sharedInfo) => sharedInfo[0] === moduleId
+      )
+
+      if (
+        shared &&
+        (!context.viteDevServer ||
+          isOptimize ||
+          optimizeDepsExclude.includes(moduleId))
+      ) {
         magicString.overwrite(
           container.start,
           container.end,
-          `__federation_method_importShared(${JSON.stringify(moduleId)})`
+          `__federation_method_importShared(${JSON.stringify(
+            moduleId
+          )}, ${JSON.stringify(shared[1].shareScope)})`
         )
         hasImportShared = true
       }
@@ -324,68 +365,97 @@ export default async function transfromCodeProd(
   await Promise.all(promises)
 
   const sources = Object.keys(sourceLocalNamesMap)
-  if (sources.length) {
+  if (sources.length || optimizeNodes.length) {
     traverse.default(ast, {
       Program(path) {
         sources.forEach((source) => {
-          sourceLocalNamesMap[source].forEach(
-            ({ localName, isDefault, isRequire }) => {
-              path.scope.bindings[localName].referencePaths.forEach(
-                (referencePath) => {
-                  const node = referencePath.node
-                  const container = referencePath.container
-                  if (
-                    container.type === 'ObjectProperty' &&
-                    container.key.name === container.value.name &&
-                    container.key.start === container.value.start &&
-                    container.key.end === container.value.end
-                  ) {
+          sourceLocalNamesMap[source].forEach(({ localName, isDefault }) => {
+            path.scope.bindings[localName].referencePaths.forEach(
+              (referencePath) => {
+                const node = referencePath.node
+                const container = referencePath.container
+                if (
+                  container.type === 'ObjectProperty' &&
+                  container.key.name === container.value.name &&
+                  container.key.start === container.value.start &&
+                  container.key.end === container.value.end
+                ) {
+                  if (isDefault) {
+                    magicString.appendRight(container.key.end, `: ${source}`)
+                  } else {
                     magicString.appendRight(
                       container.key.end,
-                      `: ${
-                        isRequire
-                          ? source
-                          : isDefault
-                          ? `__federation_method_unwrapDefault(${source})`
-                          : `__federation_method_importRef(${source}, __federation_var_${node.name})`
-                      }`
+                      `: __federation_method_importRef(${source}, __federation_var_${node.name})`
                     )
-                  } else if (container.type === 'NewExpression') {
-                    magicString.overwrite(
-                      node.start,
-                      node.end,
-                      isRequire
-                        ? source
-                        : isDefault
-                        ? `(__federation_method_unwrapDefault(${source}))`
-                        : `(__federation_method_importRef(${source}, __federation_var_${node.name}))`
-                    )
+                    hasImportRef = true
+                  }
+                } else if (container.type === 'NewExpression') {
+                  if (isDefault) {
+                    magicString.overwrite(node.start, node.end, source)
                   } else {
                     magicString.overwrite(
                       node.start,
                       node.end,
-                      isRequire
-                        ? source
-                        : isDefault
-                        ? container.type === 'ExportSpecifier'
-                          ? source
-                          : `__federation_method_unwrapDefault(${source})`
-                        : `__federation_method_importRef(${source}, __federation_var_${node.name})`
+                      `(__federation_method_importRef(${source}, __federation_var_${node.name}))`
                     )
+                    hasImportRef = true
                   }
-                  requiresRuntime = true
+                } else {
+                  if (isDefault) {
+                    magicString.overwrite(node.start, node.end, source)
+                  } else {
+                    magicString.overwrite(
+                      node.start,
+                      node.end,
+                      `__federation_method_importRef(${source}, __federation_var_${node.name})`
+                    )
+                    hasImportRef = true
+                  }
                 }
+              }
+            )
+          })
+        })
+
+        optimizeNodes.forEach((optimizeNode) => {
+          const name = optimizeNode.declarations[0].id.name
+          path.scope.bindings[name].referencePaths.forEach((referencePath) => {
+            if (referencePath.parentPath.node.type === 'ExportSpecifier') {
+              // export { require_vue }
+              magicString.appendRight(
+                optimizeNode.end,
+                `\nconst __federation_import_${name} = await ${referencePath.node.name}();\nconst __federation_export_${name} = () => __federation_import_${name};`
+              )
+              magicString.overwrite(
+                referencePath.node.start,
+                referencePath.node.end,
+                `__federation_export_${name} as ${referencePath.node.name}`
+              )
+            } else if (
+              // export require_vue()
+              referencePath.parentPath.node.type === 'CallExpression'
+            ) {
+              magicString.overwrite(
+                referencePath.node.start,
+                referencePath.node.end,
+                `await ${referencePath.node.name}`
               )
             }
-          )
+          })
         })
       }
     })
   }
 
-  if (requiresRuntime) {
+  if (hasGetRemote) {
     magicString.prepend(
-      `import { ensure as __federation_method_ensure, getRemote as __federation_method_getRemote, wrapDefault as __federation_method_wrapDefault, unwrapDefault as __federation_method_unwrapDefault, importRef as __federation_method_importRef, wrapRequire as __federation_method_wrapRequire } from '__federation_host';\n`
+      `import { getRemote as __federation_method_getRemote } from '__federation_host';\n`
+    )
+  }
+
+  if (hasImportRef) {
+    magicString.prepend(
+      `import { importRef as __federation_method_importRef } from '__federation_utils';\n`
     )
   }
 
@@ -395,7 +465,7 @@ export default async function transfromCodeProd(
     )
   }
 
-  if (requiresRuntime || hasImportShared || modify) {
+  if (magicString.hasChanged()) {
     return {
       code: magicString.toString(),
       map: magicString.generateMap({ hires: true })

@@ -242,11 +242,6 @@ declare interface RemotesConfig {
    * the remote format
    */
   format?: 'esm' | 'systemjs' | 'var'
-
-  /**
-   * from
-   */
-  from?: 'vite' | 'webpack'
 }
 
 /**

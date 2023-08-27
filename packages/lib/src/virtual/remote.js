@@ -1,3 +1,5 @@
+import { unwrapDefault } from '__federation_utils'
+
 let moduleMap = {
   // moduleMap
 }
@@ -23,9 +25,9 @@ export const DYNAMIC_LOADING_CSS = (cssFilePaths) => {
   })
 }
 async function __federation_import(name) {
-  return import(name).then(async (res) => {
+  return import(/* @vite-ignore */ name).then(async (res) => {
     await res.options.promiseExportName
-    return res
+    return unwrapDefault(res)
   })
 }
 export const get = (module) => {

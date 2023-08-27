@@ -13,6 +13,7 @@
 // SPDX-License-Identifier: MulanPSL-2.0
 // *****************************************************************************
 
+import { posix, win32 } from 'node:path'
 import type { RemotesConfig } from '../../types'
 
 const letterReg = new RegExp('[0-9a-zA-Z]+')
@@ -42,19 +43,20 @@ export function createRemotesMap(remotes: Remote[]): string {
     const external = remote.config.external[0]
     const externalType = remote.config.externalType
     if (externalType === 'promise') {
-      return `()=>${external}`
+      return `() => ${external}`
     } else {
       return `'${external}'`
     }
   }
-  return `const remotesMap = {
-${remotes
-  .map(
-    (remote) =>
-      `'${remote.id}':{url:${createUrl(remote)},format:'${
+  return remotes
+    .map((remote) => {
+      return `'${remote.id}': { url: ${createUrl(remote)}, format: '${
         remote.config.format
-      }',from:'${remote.config.from}'}`
-  )
-  .join(',\n  ')}
-};`
+      }' }`
+    })
+    .join(',\n  ')
+}
+
+export function normalizePath(filename: string) {
+  return filename.split(win32.sep).join(posix.sep)
 }

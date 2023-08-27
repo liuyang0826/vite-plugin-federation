@@ -7,14 +7,9 @@ export default function generateShared(context: Context, bundle: OutputBundle) {
   for (const key in bundle) {
     const chunk = bundle[key]
     if (chunk.type === 'chunk') {
-      if (!context.isHost) {
-        const regRst = sharedFilePathReg.exec(chunk.fileName)
-        if (
-          regRst &&
-          context.shareName2Prop.get(regRst[1])?.generate === false
-        ) {
-          needRemoveShared.add(key)
-        }
+      const regRst = sharedFilePathReg.exec(chunk.fileName)
+      if (regRst && context.shareName2Prop.get(regRst[1])?.generate) {
+        needRemoveShared.add(key)
       }
     }
   }

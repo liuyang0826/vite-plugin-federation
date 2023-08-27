@@ -18,8 +18,14 @@ export default defineConfig({
       shared: ['vue','pinia']
   })
   ],
+  server: {
+    fs: {
+      allow: ["../../../../"]
+    }
+  },
   build:{
     minify:false,
     target: ["chrome89", "edge89", "firefox89", "safari15"]
-  }
+  },
+  // optimizeDeps:{needsInterop}
 })

@@ -9,7 +9,8 @@
   "scripts": {
     "build": "pnpm --parallel --filter \"./**\" build",
     "serve": "pnpm --parallel --filter \"./**\" serve",
-    "stop": "kill-port --port 5000,5001"
+    "stop": "kill-port --port 5000,5001",
+    "dev": "pnpm --filter \"./**\" dev"
   },
   "devDependencies": {
     "@liuyang0826/vite-plugin-federation": "workspace:*",
