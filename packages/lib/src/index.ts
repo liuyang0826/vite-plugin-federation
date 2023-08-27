@@ -37,7 +37,10 @@ export default function federation(
     expose: parseExposeOptions(options),
     shared: parseSharedOptions(options),
     remote: parseRemoteOptions(options),
-    builder: 'rollup'
+    builder: 'rollup',
+    get assetsDir() {
+      return this.viteConfig.build.assetsDir
+    }
   } as Context
 
   context.isHost = !!context.remote.length && !context.expose.length
@@ -69,8 +72,7 @@ export default function federation(
       },
       configResolved(config) {
         // only run when builder is vite,rollup doesnt has hook named `configResolved`
-        context.assetsDir = config.build.assetsDir
-        context.viteConfigResolved = config
+        context.viteConfig = config
         context.builder = 'vite'
       },
       resolveId(...args) {
@@ -89,6 +91,9 @@ export default function federation(
       config(config) {
         // need to include remotes in the optimizeDeps.exclude
         const exclude = context.remote
+          .concat(
+            context.shared.filter((item) => item[1].packagePath !== item[0])
+          )
           .map((item) => item[0])
           .concat('__federation_shared')
         const plugins: any[] = []
@@ -114,13 +119,13 @@ export default function federation(
         // get moduleGraph for dev mode dynamic reference
         context.viteDevServer = server
         server.middlewares.use((req, res, next) => {
-          if (
-            req.url !==
-            `/${context.assetsDir ? context.assetsDir + '/' : ''}${
-              options.filename
-            }`
-          )
+          const {
+            base,
+            build: { assetsDir }
+          } = context.viteConfig
+          if (req.url !== `${base}${assetsDir}/${options.filename}`)
             return next()
+
           res.writeHead(302, {
             Location: '/@id/__x00__virtual:__federation_remote',
             'Access-Control-Allow-Origin': '*'

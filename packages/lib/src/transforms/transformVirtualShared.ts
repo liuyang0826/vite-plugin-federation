@@ -15,7 +15,7 @@ export default function transformVirtualShared(
         return `'${
           sharedInfo[0]
         }': { get: ()=> async ()=> unwrapDefault(await import(${JSON.stringify(
-          sharedInfo[0]
+          sharedInfo[1].packagePath
         )})), import: ${sharedInfo[1].import}${
           sharedInfo[1].requiredVersion
             ? `,requiredVersion:'${sharedInfo[1].requiredVersion}'`

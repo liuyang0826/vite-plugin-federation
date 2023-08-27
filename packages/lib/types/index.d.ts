@@ -322,6 +322,6 @@ declare interface Context {
   assetsDir: string
   exposesKeyMap: Map<string, string>
   shareName2Prop: Map<string, any>
-  viteConfigResolved: ResolvedConfig
+  viteConfig: ResolvedConfig
   viteDevServer: ViteDevServer
 }

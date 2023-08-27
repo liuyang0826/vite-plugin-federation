@@ -27,7 +27,7 @@ export async function resolveBuildVersion(
   if (context.isHost) {
     //  try to get every module package.json file
     for (const arr of context.shared) {
-      if (!arr[1].version && !arr[1].manuallyPackagePathSetting) {
+      if (!arr[1].version && arr[1].packagePath === arr[0]) {
         let packageJson
         try {
           packageJson = (await getPackageInfo(arr[0]))?.packageJson
@@ -92,7 +92,7 @@ export async function resolveServeVersion(
 ) {
   if (context.isHost && !context.isRemote) {
     for (const arr of context.shared) {
-      if (!arr[1].version && !arr[1].manuallyPackagePathSetting) {
+      if (!arr[1].version && arr[1].packagePath === arr[0]) {
         let packageJson
         try {
           packageJson = (await getPackageInfo(arr[0]))?.packageJson

@@ -13,6 +13,7 @@
     "build:remotes": "pnpm --parallel --filter \"./remote-A\" --filter \"./remote-B\"  build",
     "serve:remotes": "pnpm --parallel --filter \"./remote-A\" --filter \"./remote-B\"  serve",
     "dev:hosts": "pnpm --filter \"./host\" dev",
+    "dev": "pnpm --filter \"./**\" dev",
     "stop": "kill-port --port 5000,5001,5002,5003"
   },
   "devDependencies": {

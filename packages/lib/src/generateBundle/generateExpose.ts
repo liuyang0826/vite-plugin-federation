@@ -42,10 +42,7 @@ export default function generateExpose(
       new RegExp(`(["'])${DYNAMIC_LOADING_CSS_PREFIX}.*?\\1`, 'g'),
       (str) => {
         // when build.cssCodeSplit: false, all files are aggregated into style.xxxxxxxx.css
-        if (
-          context.viteConfigResolved &&
-          !context.viteConfigResolved.build.cssCodeSplit
-        ) {
+        if (context.viteConfig && !context.viteConfig.build.cssCodeSplit) {
           if (cssBundlesMap.size) {
             return `[${[...cssBundlesMap.values()]
               .map((cssBundle) => JSON.stringify(basename(cssBundle.fileName)))

@@ -7,6 +7,7 @@ export function unwrapDefault(module) {
       if (!Object.getOwnPropertyDescriptor(proxy, k)) {
         Object.defineProperty(proxy, k, {
           enumerable: true,
+          configurable: true,
           get() {
             return importRef(module, k)
           },

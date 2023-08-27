@@ -45,7 +45,7 @@ export default async function transformCode(
   const optimizeNodes: any[] = []
 
   const optimizeDepsExclude = context.viteDevServer
-    ? context.viteConfigResolved.optimizeDeps.exclude ?? []
+    ? context.viteConfig.optimizeDeps.exclude ?? []
     : []
 
   traverse.default(ast, {
