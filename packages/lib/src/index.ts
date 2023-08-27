@@ -11,8 +11,8 @@ import {
 } from './utils/parseOptions'
 import { Remote } from './utils'
 import createVirtual from './virtual/createVirtual'
-import transformVirtualHost from './transforms/transformVirtualHost'
-import transformVirtualShared from './transforms/transformVirtualShared'
+import injectHostSharedModule from './transforms/injectHostSharedModule'
+import injectLocalSharedModule from './transforms/injectLocalSharedModule'
 import transformCode from './transforms/transformCode'
 import {
   resolveBuildVersion,
@@ -20,7 +20,6 @@ import {
 } from './utils/resolveVersion'
 import emitFiles from './utils/emitFiles'
 import processExternal from './utils/processExternal'
-import generateShared from './generateBundle/generateShared'
 import generateExpose from './generateBundle/generateExpose'
 import { Context, VitePluginFederationOptions } from 'types'
 import { defu } from 'defu'
@@ -147,13 +146,15 @@ export default function federation(
         }
       },
       async transform(code, id) {
-        if (context.isShared && id === '\0virtual:__federation_shared') {
-          return transformVirtualShared.call(this, context, code)
+        if (context.isShared) {
+          if (id === '\0virtual:__federation_shared') {
+            return injectLocalSharedModule.call(this, context, code)
+          }
+          if (id === '\0virtual:__federation_host') {
+            return injectHostSharedModule.call(this, context, code)
+          }
         }
-        if (context.isHost && id === '\0virtual:__federation_host') {
-          return transformVirtualHost.call(this, context, code)
-        }
-        if (context.isHost || context.isShared) {
+        if (context.isHost || context.isRemote) {
           return transformCode.call(this, context, code, remotes, id)
         }
       },
@@ -187,9 +188,6 @@ export default function federation(
         return outputOption
       },
       generateBundle(_, bundle) {
-        if (context.isRemote && context.isShared) {
-          generateShared(context, bundle)
-        }
         generateExpose.call(this, context, bundle)
       }
     }

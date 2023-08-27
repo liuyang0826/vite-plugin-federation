@@ -1,15 +1,14 @@
 import type { TransformPluginContext } from 'rollup'
-import { getModuleMarker, normalizePath } from '../utils'
+import { normalizePath } from '../utils'
 import type { Context } from 'types'
 import { basename, join } from 'node:path'
 
-export default async function transformVirtualHost(
+export default async function injectHostSharedModule(
   this: TransformPluginContext,
   context: Context,
   code: string
 ) {
-  if (!context.shared.length) return
-  const scopeCode: string[] = []
+  const hostSharedModuleCode: string[] = []
   if (context.viteDevServer) {
     const { base, server: serverConfiguration } = context.viteDevServer.config
     const cwdPath = normalizePath(process.cwd())
@@ -34,7 +33,7 @@ export default async function transformVirtualHost(
       const url = origin
         ? `'${origin}${pathname}'`
         : `window.location.origin + '${pathname}'`
-      scopeCode.push(
+      hostSharedModuleCode.push(
         `'${item[0]}':{ '${item[1].version}': { get: () => get(${url}) } }`
       )
     }
@@ -45,10 +44,13 @@ export default async function transformVirtualHost(
       if (typeof obj === 'object') {
         const fileName = `./${basename(this.getFileName(obj.emitFile))}`
         str += `get: () => get('${fileName}'), loaded: 1`
-        scopeCode.push(`'${arr[0]}':{ '${obj.version}':{ ${str} } }`)
+        hostSharedModuleCode.push(`'${arr[0]}':{ '${obj.version}':{ ${str} } }`)
       }
     })
   }
 
-  return code.replace(getModuleMarker('shareScope'), scopeCode.join(',\n    '))
+  return code.replace(
+    '// hostSharedModule',
+    hostSharedModuleCode.join(',\n    ')
+  )
 }

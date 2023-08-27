@@ -1,14 +1,13 @@
 import type { TransformPluginContext } from 'rollup'
 import type { Context } from 'types'
 import { basename } from 'node:path'
-import { getModuleMarker } from '../utils'
 
-export default function transformVirtualShared(
+export default function injectLocalSharedModule(
   this: TransformPluginContext,
   context: Context,
   code: string
 ) {
-  const moduleMapCode = context.shared
+  const localSharedModuleCode = context.shared
     .filter((shareInfo) => shareInfo[1].generate)
     .map((sharedInfo) => {
       if (context.viteDevServer) {
@@ -32,7 +31,7 @@ export default function transformVirtualShared(
           : ''
       }}`
     })
-    .join(',')
+    .join(',\n  ')
 
-  return code.replace(getModuleMarker('moduleMap', 'var'), `{${moduleMapCode}}`)
+  return code.replace('// localSharedModule', `${localSharedModuleCode}`)
 }

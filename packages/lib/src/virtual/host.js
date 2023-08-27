@@ -19,8 +19,8 @@ function get(name) {
   )
 }
 
-const shareScope = {
-  // getModuleMarker('shareScope')
+const hostSharedModule = {
+  // hostSharedModule
 }
 
 const initMap = Object.create(null)
@@ -35,7 +35,7 @@ async function ensure(remoteId) {
           if (!remote.inited) {
             // eslint-disable-next-line no-undef
             remote.lib = window[remoteId]
-            remote.lib.init(shareScope)
+            remote.lib.init(hostSharedModule)
             remote.inited = true
           }
           resolve(remote.lib)
@@ -51,9 +51,9 @@ async function ensure(remoteId) {
           import(/* @vite-ignore */ url)
             .then((lib) => {
               if (!remote.inited) {
-                lib.init(shareScope)
+                lib.init(hostSharedModule)
                 remote.lib = lib
-                remote.lib.init(shareScope)
+                remote.lib.init(hostSharedModule)
                 remote.inited = true
               }
               resolve(remote.lib)

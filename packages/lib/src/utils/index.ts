@@ -32,10 +32,6 @@ export function removeNonRegLetter(str: string, reg = letterReg): string {
   return ret
 }
 
-export function getModuleMarker(value: string, type?: string): string {
-  return type ? `__rf_${type}__${value}` : `__rf_placeholder__${value}`
-}
-
 export type Remote = { id: string; regexp: RegExp; config: RemotesConfig }
 
 export function createRemotesMap(remotes: Remote[]): string {

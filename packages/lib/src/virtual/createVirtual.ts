@@ -6,7 +6,6 @@ import utils from './utils.js?raw'
 import {
   Remote,
   createRemotesMap,
-  getModuleMarker,
   normalizePath,
   removeNonRegLetter
 } from '../utils'
@@ -23,16 +22,10 @@ export default function createVirtual(
   options: VitePluginFederationOptions,
   remotes: Remote[]
 ) {
-  let __federation_host = host.replace(
+  const __federation_host = host.replace(
     '// remotesMap',
     createRemotesMap(remotes)
   )
-  if (context.isHost) {
-    __federation_host = __federation_host.replace(
-      "// getModuleMarker('shareScope')",
-      getModuleMarker('shareScope')
-    )
-  }
 
   let __federation_remote = remote
   let moduleMap = ''

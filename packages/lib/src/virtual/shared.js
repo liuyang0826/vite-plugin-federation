@@ -2,7 +2,9 @@ import { satisfy } from '@liuyang0826/vite-plugin-federation/satisfy'
 import { unwrapDefault } from '__federation_utils'
 
 // eslint-disable-next-line no-undef
-const moduleMap = __rf_var__moduleMap
+const localSharedModule = {
+  // localSharedModule
+}
 const moduleCache = Object.create(null)
 async function importShared(name, shareScope) {
   return moduleCache[name]
@@ -19,9 +21,9 @@ async function getSharedFromRuntime(name, shareScope) {
     const versionObj = globalThis.__federation_shared__[shareScope][name]
     const versionKey = Object.keys(versionObj)[0]
     const versionValue = Object.values(versionObj)[0]
-    if (moduleMap[name]?.requiredVersion) {
+    if (localSharedModule[name]?.requiredVersion) {
       // judge version satisfy
-      if (satisfy(versionKey, moduleMap[name].requiredVersion)) {
+      if (satisfy(versionKey, localSharedModule[name].requiredVersion)) {
         module = await (await versionValue.get())()
       } else {
         console.log(
@@ -38,8 +40,8 @@ async function getSharedFromRuntime(name, shareScope) {
   }
 }
 async function getSharedFromLocal(name) {
-  if (moduleMap[name]?.import) {
-    let module = await (await moduleMap[name].get())()
+  if (localSharedModule[name]?.import) {
+    let module = await (await localSharedModule[name].get())()
     moduleCache[name] = module
     return module
   } else {
@@ -55,7 +57,7 @@ async function importSharedDev(name, shareScope, get) {
         getSharedFromLocalDev(name, get)
 }
 async function getSharedFromLocalDev(name, get) {
-  if (moduleMap[name]?.import) {
+  if (localSharedModule[name]?.import) {
     let module = get()
     moduleCache[name] = module
     return module

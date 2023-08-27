@@ -33,9 +33,9 @@ async function __federation_import(name) {
 export const get = (module) => {
   return moduleMap[module]()
 }
-export const init = (shareScope) => {
+export const init = (hostSharedModule) => {
   globalThis.__federation_shared__ = globalThis.__federation_shared__ || {}
-  Object.entries(shareScope).forEach(([key, value]) => {
+  Object.entries(hostSharedModule).forEach(([key, value]) => {
     const versionKey = Object.keys(value)[0]
     const versionValue = Object.values(value)[0]
     const scope = versionValue.scope || 'default'

@@ -8,18 +8,7 @@ export default function emitFiles(
   context: Context,
   options: VitePluginFederationOptions
 ) {
-  // if (context.shared.length && context.isRemote) {
-  //   this.emitFile({
-  //     fileName: `${
-  //       context.assetsDir ? context.assetsDir + '/' : ''
-  //     }__federation_fn_import.js`,
-  //     type: 'chunk',
-  //     id: '__federation_fn_import',
-  //     preserveSignature: 'strict'
-  //   })
-  // }
-
-  if (context.expose.length > 0) {
+  if (context.isRemote) {
     this.emitFile({
       fileName: `${context.assetsDir ? context.assetsDir + '/' : ''}${
         options.filename
@@ -30,8 +19,9 @@ export default function emitFiles(
     })
   }
 
-  if (context.isShared) {
+  if ((context.isHost || context.isRemote) && context.isShared) {
     for (const sharedInfo of context.shared) {
+      if (!sharedInfo[1].generate) continue
       const basename = `__federation_shared_${removeNonRegLetter(
         sharedInfo[0],
         NAME_CHAR_REG
@@ -48,14 +38,12 @@ export default function emitFiles(
     }
   }
 
-  if (context.isRemote) {
-    for (const expose of context.expose) {
-      this.emitFile({
-        type: 'chunk',
-        id: expose[1].id ?? expose[1].import,
-        name: context.exposesKeyMap.get(expose[0]),
-        preserveSignature: 'allow-extension'
-      })
-    }
+  for (const expose of context.expose) {
+    this.emitFile({
+      type: 'chunk',
+      id: expose[1].id ?? expose[1].import,
+      name: context.exposesKeyMap.get(expose[0]),
+      preserveSignature: 'allow-extension'
+    })
   }
 }
