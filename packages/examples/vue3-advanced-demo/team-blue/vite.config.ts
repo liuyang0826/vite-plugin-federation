@@ -6,9 +6,10 @@ import ElementPlus from 'unplugin-element-plus/vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: './',
   plugins: [
     ElementPlus(),
-    cssInjectedByJsPlugin(),
+    // cssInjectedByJsPlugin(),
     vue(),
     federation({
       name: 'team-blue',
@@ -22,6 +23,7 @@ export default defineConfig({
   ],
   build: {
     minify: false,
-    target: ["chrome89", "edge89", "firefox89", "safari15"]
+    target: ["chrome89", "edge89", "firefox89", "safari15"],
+    // modulePreload: false
  }
 })

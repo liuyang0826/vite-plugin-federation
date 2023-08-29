@@ -8,30 +8,23 @@ import {
   parseExposeOptions,
   parseRemoteOptions,
   parseSharedOptions
-} from './utils/parseOptions'
+} from './parseOptions'
 import { Remote } from './utils'
 import createVirtual from './virtual/createVirtual'
-import injectHostSharedModule from './transforms/injectHostSharedModule'
-import injectLocalSharedModule from './transforms/injectLocalSharedModule'
-import transformCode from './transforms/transformCode'
-import {
-  resolveBuildVersion,
-  resolveServeVersion
-} from './utils/resolveVersion'
-import emitFiles from './utils/emitFiles'
-import processExternal from './utils/processExternal'
-import generateExpose from './generateBundle/generateExpose'
-import { Context, VitePluginFederationOptions } from 'types'
+import injectHostShared from './injectHostShared'
+import injectLocalShared from './injectLocalShared'
+import transform from './transform'
+import { resolveBuildVersion, resolveServeVersion } from './resolveVersion'
+import emitFiles from './emitFiles'
+import processExternal from './processExternal'
+import type { Context, VitePluginFederationOptions } from 'types'
 import { defu } from 'defu'
-import optimizeDepsPlugin from './transforms/optimizeDepsPlugin'
+import optimizeDepsPlugin from './optimizeDepsPlugin'
+import processEntry from './processEntry'
 
 export default function federation(
   options: VitePluginFederationOptions
 ): Plugin[] {
-  options.filename = options.filename ?? DEFAULT_ENTRY_FILENAME
-  options.promiseExportName =
-    options.promiseExportName ?? DEFAULT_PROMIESE_EXPORT_NAME
-
   const context = {
     expose: parseExposeOptions(options),
     shared: parseSharedOptions(options),
@@ -39,7 +32,9 @@ export default function federation(
     builder: 'rollup',
     get assetsDir() {
       return this.viteConfig.build.assetsDir
-    }
+    },
+    filename: options.filename ?? DEFAULT_ENTRY_FILENAME,
+    promiseExportName: options.promiseExportName ?? DEFAULT_PROMIESE_EXPORT_NAME
   } as Context
 
   context.isHost = !!context.remote.length && !context.expose.length
@@ -122,7 +117,7 @@ export default function federation(
             base,
             build: { assetsDir }
           } = context.viteConfig
-          if (req.url !== `${base}${assetsDir}/${options.filename}`)
+          if (req.url !== `${base}${assetsDir}/${context.filename}`)
             return next()
 
           res.writeHead(302, {
@@ -137,25 +132,25 @@ export default function federation(
       name: 'federation:build',
       enforce: 'post',
       async buildStart() {
-        virtual = createVirtual(context, options, remotes)
+        virtual = createVirtual(context, remotes)
         if (context.viteDevServer) {
           await resolveServeVersion.call(this, context)
         } else {
           await resolveBuildVersion.call(this, context)
-          emitFiles.call(this, context, options)
+          emitFiles.call(this, context)
         }
       },
-      async transform(code, id) {
+      transform(code, id) {
         if (context.isShared) {
           if (id === '\0virtual:__federation_shared') {
-            return injectLocalSharedModule.call(this, context, code)
+            return injectLocalShared.call(this, context, code)
           }
           if (id === '\0virtual:__federation_host') {
-            return injectHostSharedModule.call(this, context, code)
+            return injectHostShared.call(this, context, code)
           }
         }
         if (context.isHost || context.isRemote) {
-          return transformCode.call(this, context, code, remotes, id)
+          return transform.call(this, context, code, remotes, id)
         }
       },
       outputOptions(outputOption) {
@@ -188,7 +183,7 @@ export default function federation(
         return outputOption
       },
       generateBundle(_, bundle) {
-        generateExpose.call(this, context, bundle)
+        processEntry.call(this, context, bundle)
       }
     }
   ]

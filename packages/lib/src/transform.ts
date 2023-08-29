@@ -4,7 +4,7 @@ import type { File } from '@babel/types'
 import { parse } from '@babel/parser'
 import type { Context } from 'types'
 import MagicString from 'magic-string'
-import type { Remote } from '../utils'
+import { str, type Remote } from './utils'
 import { dirname, join } from 'node:path'
 import { existsSync, readFileSync } from 'node:fs'
 import {
@@ -12,10 +12,10 @@ import {
   OPTIMIZE_DEPS_NAMESPACE,
   OPTIMIZE_LOCAL_SUFFIX,
   OPTIMIZE_SHARED_SUFFIX
-} from '../constants'
+} from './constants'
 import type { TransformPluginContext } from 'rollup'
 
-export default async function transformCode(
+export default async function transform(
   this: TransformPluginContext,
   context: Context,
   code: string,
@@ -117,9 +117,9 @@ export default async function transformCode(
                     magicString.overwrite(
                       node.start,
                       node.end,
-                      `const ${afterImportName} = await __federation_method_getRemote(${JSON.stringify(
+                      `const ${afterImportName} = await __federation_method_getRemote(${str(
                         remote.id
-                      )} , ${JSON.stringify(modName)});`
+                      )} , ${str(modName)});`
                     )
                     hasGetRemote = true
                   } else {
@@ -165,9 +165,9 @@ export default async function transformCode(
                     magicString.overwrite(
                       node.start,
                       node.end,
-                      `const ${afterImportName} = await __federation_method_getRemote(${JSON.stringify(
+                      `const ${afterImportName} = await __federation_method_getRemote(${str(
                         remote.id
-                      )} , ${JSON.stringify(modName)});`
+                      )}, ${str(modName)});`
                     )
                     hasGetRemote = true
                   } else {
@@ -259,9 +259,9 @@ export default async function transformCode(
                 }
                 if (!hasStaticImported.has(moduleId)) {
                   hasStaticImported.set(moduleId, afterImportName)
-                  const line = `const ${afterImportName} = await __federation_method_importShared(${JSON.stringify(
+                  const line = `const ${afterImportName} = await __federation_method_importShared(${str(
                     moduleId
-                  )}, ${JSON.stringify(shared[1].shareScope)});\n`
+                  )}, ${str(shared[1].shareScope)});\n`
                   magicString.overwrite(node.start, node.end, line)
                   hasImportShared = true
                 } else {
@@ -275,9 +275,9 @@ export default async function transformCode(
                   magicString.overwrite(
                     node.start,
                     node.end,
-                    `const ${afterImportName} = await __federation_method_importShared(${JSON.stringify(
+                    `const ${afterImportName} = await __federation_method_importShared(${str(
                       moduleId
-                    )}, ${JSON.stringify(shared[1].shareScope)})`
+                    )}, ${str(shared[1].shareScope)})`
                   )
                   hasImportShared = true
                 } else {
@@ -333,9 +333,7 @@ export default async function transformCode(
           magicString.overwrite(
             container.start,
             container.end,
-            `__federation_method_getRemote(${JSON.stringify(
-              remote.id
-            )} , ${JSON.stringify(modName)})`
+            `__federation_method_getRemote(${str(remote.id)} , ${str(modName)})`
           )
           hasGetRemote = true
         }
@@ -353,11 +351,27 @@ export default async function transformCode(
         magicString.overwrite(
           container.start,
           container.end,
-          `__federation_method_importShared(${JSON.stringify(
-            moduleId
-          )}, ${JSON.stringify(shared[1].shareScope)})`
+          `__federation_method_importShared(${str(moduleId)}, ${str(
+            shared[1].shareScope
+          )})`
         )
         hasImportShared = true
+      }
+    },
+    ReturnStatement({ node }) {
+      if (
+        id === '\0vite/preload-helper' &&
+        node.argument &&
+        node.argument.type === 'BinaryExpression' &&
+        node.argument.left.value[0] === '/'
+      ) {
+        magicString.prepend(
+          'const __federation_origin = new URL(import.meta.url).origin;\n'
+        )
+        magicString.appendLeft(
+          node.argument.left.start,
+          '__federation_origin + '
+        )
       }
     }
   })

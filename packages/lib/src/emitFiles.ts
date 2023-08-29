@@ -1,17 +1,13 @@
 import type { PluginContext } from 'rollup'
-import type { Context, VitePluginFederationOptions } from 'types'
-import { removeNonRegLetter } from '.'
-import { NAME_CHAR_REG } from '../constants'
+import type { Context } from 'types'
+import { removeNonRegLetter } from './utils'
+import { NAME_CHAR_REG } from './constants'
 
-export default function emitFiles(
-  this: PluginContext,
-  context: Context,
-  options: VitePluginFederationOptions
-) {
+export default function emitFiles(this: PluginContext, context: Context) {
   if (context.isRemote) {
     this.emitFile({
       fileName: `${context.assetsDir ? context.assetsDir + '/' : ''}${
-        options.filename
+        context.filename
       }`,
       type: 'chunk',
       id: '__federation_remote',
@@ -36,14 +32,5 @@ export default function emitFiles(
         name: sharedInfo[0]
       })
     }
-  }
-
-  for (const expose of context.expose) {
-    this.emitFile({
-      type: 'chunk',
-      id: expose[1].id ?? expose[1].import,
-      name: context.exposesKeyMap.get(expose[0]),
-      preserveSignature: 'allow-extension'
-    })
   }
 }

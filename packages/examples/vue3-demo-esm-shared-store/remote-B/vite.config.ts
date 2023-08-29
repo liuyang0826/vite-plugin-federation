@@ -30,6 +30,7 @@ export default defineConfig({
             promiseImportName: i => `__tla_${i}`
         })
     ],
+    base: "http://127.0.0.1:5002",
     build: {
         assetsInlineLimit: 40960,
         minify: true,

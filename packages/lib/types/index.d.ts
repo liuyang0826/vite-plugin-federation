@@ -320,8 +320,10 @@ declare interface Context {
   isShared: boolean
   builder: 'vite' | 'rollup'
   assetsDir: string
+  filename: string
   exposesKeyMap: Map<string, string>
   shareName2Prop: Map<string, any>
   viteConfig: ResolvedConfig
   viteDevServer: ViteDevServer
+  promiseExportName: string
 }

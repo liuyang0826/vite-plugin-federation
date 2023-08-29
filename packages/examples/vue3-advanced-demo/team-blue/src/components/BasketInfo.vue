@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, defineAsyncComponent } from 'vue'
 import { useStore } from '../store'
+const BuyButton = defineAsyncComponent(() => import("./BuyButton.vue"))
 const store = useStore();
 
 const basketClass = computed(() => ({
@@ -12,6 +13,7 @@ const basketClass = computed(() => ({
 <template>
   <div className="blue-basket" id="basket">
     <div :class="basketClass">basket: {{ store.items }} item(s)</div>
+    <BuyButton item="sas" />
   </div>
 </template>
 

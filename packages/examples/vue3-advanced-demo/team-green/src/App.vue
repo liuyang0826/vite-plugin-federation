@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import Recommendations from './components/Recommendations.vue'
+import { defineAsyncComponent } from 'vue';
+const Recommendations = defineAsyncComponent(() => import('./components/Recommendations.vue'))
 </script>
 
 <template>

@@ -7,7 +7,7 @@ import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js'
 export default defineConfig({
   plugins: [
     vue(),
-    cssInjectedByJsPlugin(),
+    // cssInjectedByJsPlugin(),
     federation({
       name: 'team-green',
       filename: 'remoteEntry.js',
@@ -17,7 +17,6 @@ export default defineConfig({
       shared: ['vue', 'pinia']
     })
   ],
-  base: 'http://localhost:5001',
   build: {
     minify: false,
     target: ["chrome89", "edge89", "firefox89", "safari15"]

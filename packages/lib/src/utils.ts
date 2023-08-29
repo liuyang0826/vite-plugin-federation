@@ -14,7 +14,7 @@
 // *****************************************************************************
 
 import { posix, win32 } from 'node:path'
-import type { RemotesConfig } from '../../types'
+import type { RemotesConfig } from '../types'
 
 const letterReg = new RegExp('[0-9a-zA-Z]+')
 
@@ -56,3 +56,5 @@ export function createRemotesMap(remotes: Remote[]): string {
 export function normalizePath(filename: string) {
   return filename.split(win32.sep).join(posix.sep)
 }
+
+export const str = JSON.stringify

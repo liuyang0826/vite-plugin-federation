@@ -15,6 +15,7 @@ export default defineConfig({
       shared: ['react','react-dom']
     })
   ],
+  base: "http://127.0.0.1:5001",
   build: {
     modulePreload: false,
     target: 'esnext',

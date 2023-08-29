@@ -14,6 +14,7 @@
     "build:remotes": "pnpm --parallel --filter \"./home\" --filter \"./css-modules\" --filter \"./common-lib\"  build",
     "serve:remotes": "pnpm --parallel --filter \"./home\" --filter \"./css-modules\" --filter \"./common-lib\"  serve",
     "dev:hosts": "pnpm --filter \"./layout\" dev",
+    "dev": "pnpm --filter \"./**\" dev",
     "stop": "kill-port --port 5000,5001,5002,5003"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import type { Plugin } from 'esbuild'
-import { OPTIMIZE_DEPS_NAMESPACE, OPTIMIZE_LOCAL_SUFFIX } from '../constants'
+import { OPTIMIZE_DEPS_NAMESPACE, OPTIMIZE_LOCAL_SUFFIX } from './constants'
 import { resolveModule } from 'local-pkg'
 import { dirname } from 'node:path'
 import { Context } from 'types'

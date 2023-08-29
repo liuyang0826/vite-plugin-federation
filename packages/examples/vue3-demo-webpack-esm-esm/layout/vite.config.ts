@@ -5,6 +5,7 @@ import federation from '@liuyang0826/vite-plugin-federation'
 // https://vitejs.dev/config/
 export default defineConfig({
   cacheDir: 'node_modules/.cacheDir',
+  base: "http://127.0.0.1:5000",
   plugins: [
     vue(),
     federation({

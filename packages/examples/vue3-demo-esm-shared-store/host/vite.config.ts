@@ -35,6 +35,7 @@ export default defineConfig({
             }
         })
     ],
+    base: "http://127.0.0.1:5000",
     build: {
         target: 'esnext',
         minify: false,

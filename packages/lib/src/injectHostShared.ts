@@ -1,9 +1,9 @@
 import type { TransformPluginContext } from 'rollup'
-import { normalizePath } from '../utils'
+import { normalizePath } from './utils'
 import type { Context } from 'types'
 import { basename, join } from 'node:path'
 
-export default async function injectHostSharedModule(
+export default async function injectHostShared(
   this: TransformPluginContext,
   context: Context,
   code: string
