@@ -32,7 +32,11 @@ export default function injectLocalShared(
           : ''
       }}`
     })
-    .join(',\n  ')
 
-  return code.replace('// localSharedModule', `${localSharedModuleCode}`)
+  return localSharedModuleCode.length
+    ? code.replace(
+        '// localSharedModule',
+        `${localSharedModuleCode.join(',\n    ')}`
+      )
+    : code
 }

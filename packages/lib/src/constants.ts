@@ -15,9 +15,9 @@
 
 export const DEFAULT_ENTRY_FILENAME = 'remoteEntry.js'
 export const DEFAULT_PROMIESE_EXPORT_NAME = '__tla'
-export const sharedFilePathReg = /__federation_shared_(.+)\.js$/
 export const NAME_CHAR_REG = new RegExp('[0-9a-zA-Z@_-]+')
 export const COMMONJS_PROXY_SUFFIX = '?commonjs-proxy'
 export const OPTIMIZE_SHARED_SUFFIX = '?federation_shared'
 export const OPTIMIZE_LOCAL_SUFFIX = '?federation_local'
 export const OPTIMIZE_DEPS_NAMESPACE = 'federation:optimize-deps'
+export const importQueryRE = /(\?|&)import=?(?:&|$)/

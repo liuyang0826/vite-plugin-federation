@@ -13,7 +13,7 @@
 // SPDX-License-Identifier: MulanPSL-2.0
 // *****************************************************************************
 
-import { posix, win32 } from 'node:path'
+import { dirname, posix, relative, win32 } from 'node:path'
 import type { RemotesConfig } from '../types'
 
 const letterReg = new RegExp('[0-9a-zA-Z]+')
@@ -58,3 +58,8 @@ export function normalizePath(filename: string) {
 }
 
 export const str = JSON.stringify
+
+export function toRelativePath(filename: string, importer: string) {
+  const relPath = relative(dirname(importer), filename)
+  return relPath[0] === '.' ? relPath : `./${relPath}`
+}

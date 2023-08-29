@@ -21,6 +21,7 @@ import type { Context, VitePluginFederationOptions } from 'types'
 import { defu } from 'defu'
 import optimizeDepsPlugin from './optimizeDepsPlugin'
 import processEntry from './processEntry'
+import devMiddleware from './devMiddleware'
 
 export default function federation(
   options: VitePluginFederationOptions
@@ -112,20 +113,7 @@ export default function federation(
       configureServer(server) {
         // get moduleGraph for dev mode dynamic reference
         context.viteDevServer = server
-        server.middlewares.use((req, res, next) => {
-          const {
-            base,
-            build: { assetsDir }
-          } = context.viteConfig
-          if (req.url !== `${base}${assetsDir}/${context.filename}`)
-            return next()
-
-          res.writeHead(302, {
-            Location: '/@id/__x00__virtual:__federation_remote',
-            'Access-Control-Allow-Origin': '*'
-          })
-          res.end()
-        })
+        server.middlewares.use(devMiddleware(context))
       }
     },
     {
@@ -141,6 +129,13 @@ export default function federation(
         }
       },
       transform(code, id) {
+        if (code.startsWith(`export default "__VITE_ASSET__`)) {
+          return code.replace(
+            /export default "(.+)"/,
+            (_, content) =>
+              `import { assetsURL } from "__federation_utils"\nexport default assetsURL("${content}", import.meta.url)`
+          )
+        }
         if (context.isShared) {
           if (id === '\0virtual:__federation_shared') {
             return injectLocalShared.call(this, context, code)

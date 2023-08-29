@@ -27,3 +27,13 @@ export function unwrapDefault(module) {
 export function importRef(source, k) {
   return source[k] ?? source.default?.[k]
 }
+
+export function assetsURL(url, importer) {
+  if (url[0] === '/') {
+    return new URL(importer).origin + url
+  }
+  if (url[0] === '.') {
+    return new URL(url, importer).href
+  }
+  return url
+}

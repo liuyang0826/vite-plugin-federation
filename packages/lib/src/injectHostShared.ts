@@ -49,8 +49,7 @@ export default async function injectHostShared(
     })
   }
 
-  return code.replace(
-    '// hostSharedModule',
-    hostSharedModuleCode.join(',\n    ')
-  )
+  return hostSharedModuleCode.length
+    ? code.replace('// hostSharedModule', hostSharedModuleCode.join(',\n    '))
+    : code
 }
