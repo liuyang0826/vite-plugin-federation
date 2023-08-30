@@ -25,5 +25,8 @@ export default defineConfig({
         format: 'system',
       }
     }
+ },
+ optimizeDeps:{
+   exclude: ["vue"]
  }
 })

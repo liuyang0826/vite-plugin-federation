@@ -262,27 +262,22 @@ export default async function transform(
                   const line = `const ${afterImportName} = await __federation_method_importShared(${str(
                     moduleId
                   )}, ${str(shared[1].shareScope)});\n`
-                  magicString.overwrite(node.start, node.end, line)
+                  magicString.prepend(line)
                   hasImportShared = true
-                } else {
-                  magicString.overwrite(node.start, node.end, '')
                 }
+                magicString.overwrite(node.start, node.end, '')
                 break
               }
               case 'ExportNamedDeclaration': {
                 if (!hasStaticImported.has(moduleId)) {
                   hasStaticImported.set(moduleId, afterImportName)
-                  magicString.overwrite(
-                    node.start,
-                    node.end,
-                    `const ${afterImportName} = await /* @__PURE__ */ __federation_method_importShared(${str(
-                      moduleId
-                    )}, ${str(shared[1].shareScope)})`
-                  )
+                  const line = `const ${afterImportName} = await __federation_method_importShared(${str(
+                    moduleId
+                  )}, ${str(shared[1].shareScope)});\n`
+                  magicString.prepend(line)
                   hasImportShared = true
-                } else {
-                  magicString.overwrite(node.start, node.end, '')
                 }
+                magicString.overwrite(node.start, node.end, '')
                 const specifiers = node.specifiers
                 let exportContent = ''
                 let deconstructContent = ''
@@ -351,9 +346,9 @@ export default async function transform(
         magicString.overwrite(
           container.start,
           container.end,
-          `/* @__PURE__ */ __federation_method_importShared(${str(
-            moduleId
-          )}, ${str(shared[1].shareScope)})`
+          `__federation_method_importShared(${str(moduleId)}, ${str(
+            shared[1].shareScope
+          )})`
         )
         hasImportShared = true
       }

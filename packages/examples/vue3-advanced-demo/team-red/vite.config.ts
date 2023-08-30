@@ -37,5 +37,7 @@ export default defineConfig({
       }
     }
   },
-  // optimizeDeps:{needsInterop}
+  optimizeDeps:{
+    exclude: ["vue"]
+  }
 })

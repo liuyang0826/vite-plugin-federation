@@ -9,11 +9,8 @@ export default function optimizeDepsPlugin(context: Context): Plugin {
   return {
     name: OPTIMIZE_DEPS_NAMESPACE,
     setup(build) {
-      const optimizeDepsExclude = context.viteConfig!.optimizeDeps.exclude
       const shareds = context.shared
-      if (optimizeDepsExclude?.length) {
-        shareds.filter((item) => !optimizeDepsExclude.includes(item[0]))
-      }
+
       build.onResolve(
         {
           filter: new RegExp(
