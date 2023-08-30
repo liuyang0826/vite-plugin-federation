@@ -12,7 +12,7 @@ export default function emitFiles(this: PluginContext, context: Context) {
       preserveSignature: 'strict'
     })
   }
-  if (context.shared) {
+  if ((context.isHost || context.isRemote) && context.isShared) {
     this.emitFile({
       type: 'chunk',
       id: '__federation_shared',

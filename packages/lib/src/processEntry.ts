@@ -20,13 +20,13 @@ export default function processEntry(
 
   function process(file: string, chunk: OutputChunk) {
     // when build.cssCodeSplit: false, all files are aggregated into style.xxxxxxxx.css
-    if (!context.viteConfig.build.cssCodeSplit) {
+    if (!context.viteConfig?.build.cssCodeSplit) {
       const cssfile = Object.values(bundle).find(
         (chunk) => extname(chunk.fileName) === '.css'
       )?.fileName
 
       if (cssfile) {
-        const config = context.viteConfig
+        const config = context.viteConfig!
         // https://github.com/vitejs/vite/blob/main/packages/vite/src/node/plugins/importAnalysisBuild.ts#L154
         const resolveModulePreloadDependencies =
           config.build.modulePreload &&
@@ -46,19 +46,6 @@ export default function processEntry(
           )}])`
         })
       }
-    }
-
-    if (
-      /(import\([^)]+\))\.then\((\S+?)\s*=>\s*([^\s)]+?)\)/.test(chunk.code)
-    ) {
-      chunk.code = chunk.code.replace(
-        /(import\([^)]+\))\.then\((\S+?)\s*=>\s*([^\s)]+?)\)/g,
-        (_, a, b, c) => {
-          return `${a}.then(${b}=>(Promise.resolve(${b}[${str(
-            context.promiseExportName
-          )}]).then(()=>${c})))`
-        }
-      )
     }
   }
 }

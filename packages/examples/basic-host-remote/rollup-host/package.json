@@ -9,5 +9,8 @@
   },
   "devDependencies": {
     "rollup": "^3.9.1"
+  },
+  "dependencies": {
+    "@rollup/plugin-node-resolve": "^15.0.1"
   }
 }

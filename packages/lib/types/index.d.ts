@@ -85,12 +85,6 @@ declare interface VitePluginFederationOptions {
    * Current operating mode
    */
   mode?: string
-
-  /**
-   * top-level-await promiseExportName
-   * @default __tla
-   */
-  promiseExportName?: string
 }
 
 type Exposes = (string | ExposesObject)[] | ExposesObject
@@ -242,12 +236,6 @@ declare interface RemotesConfig {
    * the remote format
    */
   format?: 'esm' | 'systemjs' | 'var'
-
-  /**
-   * top-level-await promiseExportName
-   * @default __tla
-   */
-  promiseExportName?: string
 }
 
 /**
@@ -324,12 +312,10 @@ declare interface Context {
   isHost: boolean
   isRemote: boolean
   isShared: boolean
-  builder: 'vite' | 'rollup'
-  assetsDir: string
+  assetsDir?: string
   filename: string
   exposesKeyMap: Map<string, string>
   shareName2Prop: Map<string, any>
-  viteConfig: ResolvedConfig
+  viteConfig?: ResolvedConfig
   viteDevServer: ViteDevServer
-  promiseExportName: string
 }

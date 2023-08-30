@@ -14,8 +14,8 @@ export default defineConfig({
                 './Button': './src/components/Button.vue'
             },
             shared: {
-                vue: {},
-                pinia: {},
+                vue: {generate: false},
+                pinia: {generate: false},
                 myStore: {
                     packagePath: './src/store.js',
                     import: false,

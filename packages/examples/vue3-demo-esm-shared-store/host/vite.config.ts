@@ -45,7 +45,8 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 minifyInternalExports: false
-            }
+            },
+            external: ["vue"]
         }
     }
 })

@@ -7,9 +7,10 @@ import { Remote, createRemotesMap, str } from '../utils'
 import type { Context } from 'types'
 
 export default function createVirtual(context: Context, remotes: Remote[]) {
-  const __federation_host = host
-    .replace('// remotesMap', createRemotesMap(remotes))
-    .replace('context.promiseExportName', context.promiseExportName)
+  const __federation_host = host.replace(
+    '// remotesMap',
+    createRemotesMap(remotes)
+  )
 
   let __federation_remote = remote
   const moduleMapCode = context.expose.map((item) => {

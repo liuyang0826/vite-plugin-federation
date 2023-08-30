@@ -39,6 +39,7 @@ async function getSharedFromRuntime(name, shareScope) {
 async function getSharedFromLocal(name) {
   if (localSharedModule[name]?.import) {
     let module = await (await localSharedModule[name].get())()
+    module = unwrapDefault(module)
     moduleCache[name] = module
     return module
   } else {
@@ -55,7 +56,8 @@ async function importSharedDev(name, shareScope, get) {
 }
 async function getSharedFromLocalDev(name, get) {
   if (localSharedModule[name]?.import) {
-    let module = unwrapDefault(get())
+    let module = get()
+    module = unwrapDefault(module)
     moduleCache[name] = module
     return module
   } else {

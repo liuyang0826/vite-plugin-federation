@@ -45,7 +45,7 @@ export default async function transform(
   const optimizeNodes: any[] = []
 
   const optimizeDepsExclude = context.viteDevServer
-    ? context.viteConfig.optimizeDeps.exclude ?? []
+    ? context.viteConfig?.optimizeDeps.exclude ?? []
     : []
 
   traverse.default(ast, {
@@ -119,9 +119,7 @@ export default async function transform(
                       node.end,
                       `const ${afterImportName} = await __federation_method_getRemote(${str(
                         remote.id
-                      )} , ${str(modName)}, ${str(
-                        remote.config.promiseExportName
-                      )});`
+                      )} , ${str(modName)});`
                     )
                     hasGetRemote = true
                   } else {
@@ -169,9 +167,7 @@ export default async function transform(
                       node.end,
                       `const ${afterImportName} = await __federation_method_getRemote(${str(
                         remote.id
-                      )}, ${str(modName)}, ${str(
-                        remote.config.promiseExportName
-                      )});`
+                      )}, ${str(modName)});`
                     )
                     hasGetRemote = true
                   } else {

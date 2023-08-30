@@ -1,9 +1,5 @@
 import type { Plugin } from 'vite'
-import {
-  DEFAULT_ENTRY_FILENAME,
-  DEFAULT_PROMIESE_EXPORT_NAME,
-  OPTIMIZE_SHARED_SUFFIX
-} from './constants'
+import { DEFAULT_ENTRY_FILENAME, OPTIMIZE_SHARED_SUFFIX } from './constants'
 import {
   parseExposeOptions,
   parseRemoteOptions,
@@ -16,7 +12,6 @@ import injectLocalShared from './injectLocalShared'
 import transform from './transform'
 import { resolveBuildVersion, resolveServeVersion } from './resolveVersion'
 import emitFiles from './emitFiles'
-import processExternal from './processExternal'
 import type { Context, VitePluginFederationOptions } from 'types'
 import { defu } from 'defu'
 import optimizeDepsPlugin from './optimizeDepsPlugin'
@@ -30,12 +25,10 @@ export default function federation(
     expose: parseExposeOptions(options),
     shared: parseSharedOptions(options),
     remote: parseRemoteOptions(options),
-    builder: 'rollup',
     get assetsDir() {
-      return this.viteConfig.build.assetsDir
+      return this.viteConfig?.build.assetsDir
     },
-    filename: options.filename ?? DEFAULT_ENTRY_FILENAME,
-    promiseExportName: options.promiseExportName ?? DEFAULT_PROMIESE_EXPORT_NAME
+    filename: options.filename ?? DEFAULT_ENTRY_FILENAME
   } as Context
 
   context.isHost = !!context.remote.length && !context.expose.length
@@ -55,20 +48,9 @@ export default function federation(
   return [
     {
       name: 'federation:prepare',
-      options(_options) {
-        if (typeof _options.input === 'string') {
-          _options.input = { index: _options.input }
-        }
-        _options.external = _options.external || []
-        if (!Array.isArray(_options.external)) {
-          _options.external = [_options.external as string]
-        }
-        return processExternal(context, _options)
-      },
       configResolved(config) {
         // only run when builder is vite,rollup doesnt has hook named `configResolved`
         context.viteConfig = config
-        context.builder = 'vite'
       },
       resolveId(...args) {
         if (args[0] === '~federation') {

@@ -61,17 +61,11 @@ async function ensure(remoteId) {
   }
 }
 
-function getRemote(
-  remoteName,
-  componentName,
-  promiseExportName = 'context.promiseExportName'
-) {
+function getRemote(remoteName, componentName) {
   return ensure(remoteName).then((remote) =>
     remote.get(componentName).then((factory) => {
       const module = factory()
-      return Promise.resolve(module[promiseExportName]).then(() =>
-        unwrapDefault(module)
-      )
+      return unwrapDefault(module)
     })
   )
 }
