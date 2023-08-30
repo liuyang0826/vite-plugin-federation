@@ -54,15 +54,16 @@ export function parseRemoteOptions(
       external: Array.isArray(item) ? item : [item],
       shareScope: options.shareScope || 'default',
       format: 'esm',
-      from: 'vite',
-      externalType: 'url'
+      externalType: 'url',
+      promiseExportName: '__tla'
     }),
     (item) => ({
       external: Array.isArray(item.external) ? item.external : [item.external],
       shareScope: item.shareScope || options.shareScope || 'default',
       format: item.format || 'esm',
-      from: item.from ?? 'vite',
-      externalType: item.externalType || 'url'
+      externalType: item.externalType || 'url',
+      promiseExportName:
+        item.promiseExportName || options.promiseExportName || '__tla'
     })
   )
 }

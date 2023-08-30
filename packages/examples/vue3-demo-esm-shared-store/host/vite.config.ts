@@ -1,6 +1,7 @@
 import {defineConfig} from 'vite'
 import vue from '@vitejs/plugin-vue'
 import federation from '@liuyang0826/vite-plugin-federation'
+import topLevelAwait from 'vite-plugin-top-level-await'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -33,7 +34,8 @@ export default defineConfig({
                     packagePath: './src/store.js'
                 }
             }
-        })
+        }),
+        topLevelAwait(),
     ],
     base: "http://127.0.0.1:5000",
     build: {

@@ -12,7 +12,10 @@ export default defineConfig({
     federation({
       name: 'team-red',
       remotes: {
-        "team-blue": "http://localhost:5002/assets/remoteEntry.js",
+        "team-blue": {
+          external: "http://localhost:5002/assets/remoteEntry-legacy.js",
+          format: "systemjs"
+        },
         "team-green": "http://localhost:5001/assets/remoteEntry.js",
       },
       shared: ['vue','pinia']
@@ -25,7 +28,14 @@ export default defineConfig({
   },
   build:{
     minify:false,
-    target: ["chrome89", "edge89", "firefox89", "safari15"]
+    target: ["chrome89", "edge89", "firefox89", "safari15"],
+    rollupOptions: {
+      output: {
+        format: 'system',
+        entryFileNames: 'assets/[name].js',
+        minifyInternalExports: false
+      }
+    }
   },
   // optimizeDeps:{needsInterop}
 })

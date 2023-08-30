@@ -19,6 +19,11 @@ export default defineConfig({
   ],
   build: {
     minify: false,
-    target: ["chrome89", "edge89", "firefox89", "safari15"]
+    target: ["chrome89", "edge89", "firefox89", "safari15"],
+    rollupOptions: {
+      output: {
+        format: 'system',
+      }
+    }
  }
 })

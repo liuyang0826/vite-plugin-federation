@@ -12,7 +12,7 @@ export default function processEntry(
 ) {
   for (const file in bundle) {
     const chunk = bundle[file] as OutputChunk
-    if (chunk?.facadeModuleId === '\0virtual:__federation_remote') {
+    if (chunk.facadeModuleId === '\0virtual:__federation_remote') {
       process(file, chunk)
       break
     }
@@ -54,18 +54,10 @@ export default function processEntry(
       chunk.code = chunk.code.replace(
         /(import\([^)]+\))\.then\((\S+?)\s*=>\s*([^\s)]+?)\)/g,
         (_, a, b, c) => {
-          return `${a}.then(${b} => (Promise.resolve(${b}[${str(
+          return `${a}.then(${b}=>(Promise.resolve(${b}[${str(
             context.promiseExportName
-          )}]).then(()=>()=>${c}.default)))`
+          )}]).then(()=>${c})))`
         }
-      )
-    } else {
-      chunk.code = chunk.code.replace(
-        /import\([^)]+?\)/g,
-        (str2) =>
-          `${str2}.then(n=>Promise.resolve(n[${str(
-            context.promiseExportName
-          )}]).then(()=>()=>n.default))`
       )
     }
   }

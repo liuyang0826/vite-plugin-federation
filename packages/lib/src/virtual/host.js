@@ -13,12 +13,6 @@ const loadJS = async (url, fn) => {
   document.getElementsByTagName('head')[0].appendChild(script)
 }
 
-function get(name) {
-  return import(/* @vite-ignore */ name).then(
-    (module) => () => unwrapDefault(module)
-  )
-}
-
 const hostSharedModule = {
   // hostSharedModule
 }
@@ -67,9 +61,18 @@ async function ensure(remoteId) {
   }
 }
 
-function getRemote(remoteName, componentName) {
+function getRemote(
+  remoteName,
+  componentName,
+  promiseExportName = 'context.promiseExportName'
+) {
   return ensure(remoteName).then((remote) =>
-    remote.get(componentName).then((factory) => factory())
+    remote.get(componentName).then((factory) => {
+      const module = factory()
+      return Promise.resolve(module[promiseExportName]).then(() =>
+        unwrapDefault(module)
+      )
+    })
   )
 }
 

@@ -11,10 +11,6 @@ async function importShared(name, shareScope) {
     ? new Promise((r) => r(moduleCache[name]))
     : (await getSharedFromRuntime(name, shareScope)) || getSharedFromLocal(name)
 }
-// eslint-disable-next-line
-async function __federation_import(name) {
-  return unwrapDefault(await import(/* @vite-ignore */ name))
-}
 async function getSharedFromRuntime(name, shareScope) {
   let module = null
   if (globalThis?.__federation_shared__?.[shareScope]?.[name]) {
@@ -35,6 +31,7 @@ async function getSharedFromRuntime(name, shareScope) {
     }
   }
   if (module) {
+    module = unwrapDefault(module)
     moduleCache[name] = module
     return module
   }
@@ -58,7 +55,7 @@ async function importSharedDev(name, shareScope, get) {
 }
 async function getSharedFromLocalDev(name, get) {
   if (localSharedModule[name]?.import) {
-    let module = get()
+    let module = unwrapDefault(get())
     moduleCache[name] = module
     return module
   } else {

@@ -137,7 +137,10 @@ export default function federation(
           )
         }
         if (context.isShared) {
-          if (id === '\0virtual:__federation_shared') {
+          if (
+            id === '\0virtual:__federation_shared' &&
+            (context.isHost || context.isRemote)
+          ) {
             return injectLocalShared.call(this, context, code)
           }
           if (id === '\0virtual:__federation_host') {
@@ -147,35 +150,6 @@ export default function federation(
         if (context.isHost || context.isRemote) {
           return transform.call(this, context, code, remotes, id)
         }
-      },
-      outputOptions(outputOption) {
-        // remove rollup generated empty imports,like import './filename.js'
-        outputOption.hoistTransitiveImports = false
-
-        const manualChunkFunc = (id: string) => {
-          //  if id is in shared dependencies, return id ,else return vite function value
-          const find = context.shared.find((arr) =>
-            arr[1].dependencies?.has(id)
-          )
-          return find ? find[0] : undefined
-        }
-
-        // only active when manualChunks is function,array not to solve
-        if (typeof outputOption.manualChunks === 'function') {
-          outputOption.manualChunks = new Proxy(outputOption.manualChunks, {
-            apply(target, _, argArray) {
-              const result = manualChunkFunc(argArray[0])
-              return result ? result : target(argArray[0], argArray[1])
-            }
-          })
-        }
-
-        // The default manualChunk function is no longer available from vite 2.9.0
-        if (outputOption.manualChunks === undefined) {
-          outputOption.manualChunks = manualChunkFunc
-        }
-
-        return outputOption
       },
       generateBundle(_, bundle) {
         processEntry.call(this, context, bundle)

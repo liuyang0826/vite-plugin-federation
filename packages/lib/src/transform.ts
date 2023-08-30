@@ -119,7 +119,9 @@ export default async function transform(
                       node.end,
                       `const ${afterImportName} = await __federation_method_getRemote(${str(
                         remote.id
-                      )} , ${str(modName)});`
+                      )} , ${str(modName)}, ${str(
+                        remote.config.promiseExportName
+                      )});`
                     )
                     hasGetRemote = true
                   } else {
@@ -167,7 +169,9 @@ export default async function transform(
                       node.end,
                       `const ${afterImportName} = await __federation_method_getRemote(${str(
                         remote.id
-                      )}, ${str(modName)});`
+                      )}, ${str(modName)}, ${str(
+                        remote.config.promiseExportName
+                      )});`
                     )
                     hasGetRemote = true
                   } else {
@@ -275,7 +279,7 @@ export default async function transform(
                   magicString.overwrite(
                     node.start,
                     node.end,
-                    `const ${afterImportName} = await __federation_method_importShared(${str(
+                    `const ${afterImportName} = await /* @__PURE__ */ __federation_method_importShared(${str(
                       moduleId
                     )}, ${str(shared[1].shareScope)})`
                   )
@@ -351,9 +355,9 @@ export default async function transform(
         magicString.overwrite(
           container.start,
           container.end,
-          `__federation_method_importShared(${str(moduleId)}, ${str(
-            shared[1].shareScope
-          )})`
+          `/* @__PURE__ */ __federation_method_importShared(${str(
+            moduleId
+          )}, ${str(shared[1].shareScope)})`
         )
         hasImportShared = true
       }
@@ -400,6 +404,25 @@ export default async function transform(
                     magicString.appendRight(
                       container.key.end,
                       `: __federation_method_importRef(${source}, __federation_var_${node.name})`
+                    )
+                    hasImportRef = true
+                  }
+                } else if (container.type === 'ExportSpecifier') {
+                  if (isDefault) {
+                    magicString.overwrite(
+                      node.start,
+                      node.end,
+                      `${source} as ${node.name}`
+                    )
+                  } else {
+                    magicString.appendLeft(
+                      container.start,
+                      `const __federation_export_${node.name} = (__federation_method_importRef(${source}, __federation_var_${node.name}));\n`
+                    )
+                    magicString.overwrite(
+                      node.start,
+                      node.end,
+                      `__federation_export_${node.name} as ${node.name}`
                     )
                     hasImportRef = true
                   }

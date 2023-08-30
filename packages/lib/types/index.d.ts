@@ -242,6 +242,12 @@ declare interface RemotesConfig {
    * the remote format
    */
   format?: 'esm' | 'systemjs' | 'var'
+
+  /**
+   * top-level-await promiseExportName
+   * @default __tla
+   */
+  promiseExportName?: string
 }
 
 /**

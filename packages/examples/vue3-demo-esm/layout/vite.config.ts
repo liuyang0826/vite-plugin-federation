@@ -42,6 +42,6 @@ export default defineConfig({
             output: {
                 minifyInternalExports: false
             }
-        }
+        },
     }
 })
