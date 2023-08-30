@@ -27,6 +27,7 @@ export default defineConfig({
         // myStore:{
         //   packagePath:'./src/store.js'
         // }
+        "@vicons/ionicons5": {}
       }
     }),
     topLevelAwait({

@@ -44,10 +44,6 @@ export default async function transform(
   let hasImportShared = false
   const optimizeNodes: any[] = []
 
-  const optimizeDepsExclude = context.viteDevServer
-    ? context.viteConfig?.optimizeDeps.exclude ?? []
-    : []
-
   traverse.default(ast, {
     enter: ({ node }: any) => {
       const leadingComment = node.leadingComments?.[0].value
@@ -72,8 +68,6 @@ export default async function transform(
 
       promises.push(
         Promise.resolve().then(async () => {
-          let isOptimize = false
-          let isRequire = false
           if (moduleId.endsWith(COMMONJS_PROXY_SUFFIX)) {
             try {
               const path = moduleId.slice(1, -COMMONJS_PROXY_SUFFIX.length)
@@ -91,7 +85,6 @@ export default async function transform(
                   )?.id
                 ) {
                   moduleId = pkgName
-                  isRequire = true
                 }
               }
             } catch {
@@ -99,7 +92,6 @@ export default async function transform(
             }
           } else if (moduleId.endsWith(OPTIMIZE_SHARED_SUFFIX)) {
             moduleId = moduleId.slice(0, -OPTIMIZE_SHARED_SUFFIX.length)
-            isOptimize = true
           }
 
           if (moduleId.indexOf('/') > -1) {
@@ -209,13 +201,7 @@ export default async function transform(
             (sharedInfo) => sharedInfo[0] === moduleId
           )
 
-          if (
-            shared &&
-            (!context.viteDevServer ||
-              isOptimize ||
-              isRequire ||
-              optimizeDepsExclude.includes(moduleId))
-          ) {
+          if (shared) {
             const afterImportName = `__federation_var_${moduleId.replace(
               /[@/\\.-]/g,
               ''
@@ -315,10 +301,8 @@ export default async function transform(
       let moduleId = container.arguments[0].value
       if (!moduleId) return
 
-      let isOptimize = false
       if (moduleId.endsWith(OPTIMIZE_SHARED_SUFFIX)) {
         moduleId = moduleId.slice(0, -OPTIMIZE_SHARED_SUFFIX.length)
-        isOptimize = true
       }
 
       if (moduleId.indexOf('/') > -1) {
@@ -337,12 +321,7 @@ export default async function transform(
         (sharedInfo) => sharedInfo[0] === moduleId
       )
 
-      if (
-        shared &&
-        (!context.viteDevServer ||
-          isOptimize ||
-          optimizeDepsExclude.includes(moduleId))
-      ) {
+      if (shared) {
         magicString.overwrite(
           container.start,
           container.end,
@@ -400,21 +379,42 @@ export default async function transform(
                   }
                 } else if (container.type === 'ExportSpecifier') {
                   if (isDefault) {
-                    magicString.overwrite(
-                      node.start,
-                      node.end,
-                      `${source} as ${node.name}`
-                    )
+                    if (
+                      container.local.name === container.exported.name &&
+                      container.local.start === container.exported.start &&
+                      container.local.end === container.exported.end
+                    ) {
+                      magicString.overwrite(
+                        node.start,
+                        node.end,
+                        `${source} as ${node.name}`
+                      )
+                    } else {
+                      magicString.overwrite(node.start, node.end, source)
+                    }
                   } else {
                     magicString.appendLeft(
                       container.start,
                       `const __federation_export_${node.name} = (__federation_method_importRef(${source}, __federation_var_${node.name}));\n`
                     )
-                    magicString.overwrite(
-                      node.start,
-                      node.end,
-                      `__federation_export_${node.name} as ${node.name}`
-                    )
+                    if (
+                      container.local.name === container.exported.name &&
+                      container.local.start === container.exported.start &&
+                      container.local.end === container.exported.end
+                    ) {
+                      magicString.overwrite(
+                        node.start,
+                        node.end,
+                        `__federation_export_${node.name} as ${node.name}`
+                      )
+                    } else {
+                      magicString.overwrite(
+                        node.start,
+                        node.end,
+                        `__federation_export_${node.name}`
+                      )
+                    }
+
                     hasImportRef = true
                   }
                 } else if (container.type === 'NewExpression') {
@@ -449,16 +449,30 @@ export default async function transform(
           const name = optimizeNode.declarations[0].id.name
           path.scope.bindings[name].referencePaths.forEach((referencePath) => {
             if (referencePath.parentPath.node.type === 'ExportSpecifier') {
-              // export { require_vue }
               magicString.appendRight(
                 optimizeNode.end,
                 `\nconst __federation_import_${name} = await ${referencePath.node.name}();\nconst __federation_export_${name} = () => __federation_import_${name};`
               )
-              magicString.overwrite(
-                referencePath.node.start,
-                referencePath.node.end,
-                `__federation_export_${name} as ${referencePath.node.name}`
-              )
+              const container = referencePath.container
+              if (
+                container.local.name === container.exported.name &&
+                container.local.start === container.exported.start &&
+                container.local.end === container.exported.end
+              ) {
+                // export { require_vue }
+                magicString.overwrite(
+                  referencePath.node.start,
+                  referencePath.node.end,
+                  `__federation_export_${name} as ${referencePath.node.name}`
+                )
+              } else {
+                // export { require_vue as xxx }
+                magicString.overwrite(
+                  referencePath.node.start,
+                  referencePath.node.end,
+                  `__federation_export_${name}`
+                )
+              }
             } else if (
               // export require_vue()
               referencePath.parentPath.node.type === 'CallExpression'

@@ -1,5 +1,6 @@
 import { h } from "vue";
 import { useStore } from '../store';
+import { GameControllerOutline } from '@vicons/ionicons5'
 
 const button = {
     name: "btn-component",
@@ -23,7 +24,7 @@ const button = {
                     store.increase();
                 }
             },
-            "Hello Remote Button"
+            [h(GameControllerOutline), "Hello Remote Button"]
         );
     },
 };
