@@ -1,5 +1,5 @@
 import type { Plugin } from 'vite'
-import { DEFAULT_ENTRY_FILENAME, OPTIMIZE_SHARED_SUFFIX } from './constants'
+import { DEFAULT_ENTRY_FILENAME } from './constants'
 import {
   parseExposeOptions,
   parseRemoteOptions,
@@ -10,7 +10,7 @@ import createVirtual from './virtual/createVirtual'
 import injectHostShared from './injectHostShared'
 import injectLocalShared from './injectLocalShared'
 import transform from './transform'
-import { resolveBuildVersion, resolveServeVersion } from './resolveVersion'
+import resolveVersion from './resolveVersion'
 import emitFiles from './emitFiles'
 import type { Context, VitePluginFederationOptions } from 'types'
 import { defu } from 'defu'
@@ -68,19 +68,11 @@ export default function federation(
       config(config) {
         // need to include remotes in the optimizeDeps.exclude
         const exclude = context.remote
-          .concat(
-            context.shared.filter((item) => item[1].packagePath !== item[0])
-          )
           .map((item) => item[0])
           .concat('__federation_shared')
         const plugins: any[] = []
         let needsInterop: string[] = []
         if (context.isRemote && context.isShared) {
-          exclude.push(
-            ...context.shared.map(
-              (item) => `${item[0]}${OPTIMIZE_SHARED_SUFFIX}`
-            )
-          )
           needsInterop = context.shared.map((item) => item[0])
           plugins.push(optimizeDepsPlugin(context))
         }
@@ -103,21 +95,12 @@ export default function federation(
       enforce: 'post',
       async buildStart() {
         virtual = createVirtual(context, remotes)
-        if (context.viteDevServer) {
-          await resolveServeVersion.call(this, context)
-        } else {
-          await resolveBuildVersion.call(this, context)
+        await resolveVersion.call(this, context)
+        if (!context.viteDevServer) {
           emitFiles.call(this, context)
         }
       },
       transform(code, id) {
-        if (code.startsWith(`export default "__VITE_ASSET__`)) {
-          return code.replace(
-            /export default "(.+)"/,
-            (_, content) =>
-              `import { assetsURL } from "__federation_utils"\nexport default assetsURL("${content}", import.meta.url)`
-          )
-        }
         if (context.isShared) {
           if (
             id === '\0virtual:__federation_shared' &&
@@ -128,6 +111,13 @@ export default function federation(
           if (id === '\0virtual:__federation_host') {
             return injectHostShared.call(this, context, code)
           }
+        }
+        if (code.startsWith(`export default "__VITE_ASSET__`)) {
+          return code.replace(
+            /export default "(.+)"/,
+            (_, content) =>
+              `import { assetsURL } from "__federation_utils"\nexport default assetsURL("${content}", import.meta.url)`
+          )
         }
         if (context.isHost || context.isRemote) {
           return transform.call(this, context, code, remotes, id)

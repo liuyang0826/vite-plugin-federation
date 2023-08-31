@@ -10,8 +10,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import {
   COMMONJS_PROXY_SUFFIX,
   OPTIMIZE_DEPS_NAMESPACE,
-  OPTIMIZE_LOCAL_SUFFIX,
-  OPTIMIZE_SHARED_SUFFIX
+  OPTIMIZE_LOCAL_SUFFIX
 } from './constants'
 import type { TransformPluginContext } from 'rollup'
 
@@ -25,12 +24,10 @@ export default async function transform(
   let ast: ParseResult<File> | null = null
   try {
     ast = parse(code, { sourceType: 'module' })
-  } catch (err) {
-    console.error(err)
+  } catch {
+    /* noop */
   }
-  if (!ast) {
-    return null
-  }
+  if (!ast) return
 
   const magicString = new MagicString(code)
   const hasStaticImported = new Map<string, string>()
@@ -90,8 +87,6 @@ export default async function transform(
             } catch {
               /* noop */
             }
-          } else if (moduleId.endsWith(OPTIMIZE_SHARED_SUFFIX)) {
-            moduleId = moduleId.slice(0, -OPTIMIZE_SHARED_SUFFIX.length)
           }
 
           if (moduleId.indexOf('/') > -1) {
@@ -298,12 +293,8 @@ export default async function transform(
       )
     },
     Import({ container }) {
-      let moduleId = container.arguments[0].value
+      const moduleId = container.arguments[0].value
       if (!moduleId) return
-
-      if (moduleId.endsWith(OPTIMIZE_SHARED_SUFFIX)) {
-        moduleId = moduleId.slice(0, -OPTIMIZE_SHARED_SUFFIX.length)
-      }
 
       if (moduleId.indexOf('/') > -1) {
         const remote = remotes.find((r) => r.regexp.test(moduleId))

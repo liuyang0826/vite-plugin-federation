@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import type { Plugin } from 'esbuild'
 import { OPTIMIZE_DEPS_NAMESPACE, OPTIMIZE_LOCAL_SUFFIX } from './constants'
 import { resolveModule } from 'local-pkg'
-import { dirname } from 'node:path'
+import { dirname, join } from 'node:path'
 import { Context } from 'types'
 
 export default function optimizeDepsPlugin(context: Context): Plugin {
@@ -33,9 +33,18 @@ export default function optimizeDepsPlugin(context: Context): Plugin {
         },
         (args) => {
           if (args.path.endsWith(OPTIMIZE_LOCAL_SUFFIX)) {
-            const path = resolveModule(
-              args.path.slice(0, -OPTIMIZE_LOCAL_SUFFIX.length)
+            const shared = context.shared.find(
+              (item) =>
+                item[0] === args.path.slice(0, -OPTIMIZE_LOCAL_SUFFIX.length)
             )!
+            if (shared[0] === shared[1].packagePath) {
+              const path = resolveModule(shared[0])!
+              return {
+                contents: readFileSync(path, 'utf-8'),
+                resolveDir: dirname(path)
+              }
+            }
+            const path = join(process.cwd(), shared[1].packagePath)
             return {
               contents: readFileSync(path, 'utf-8'),
               resolveDir: dirname(path)

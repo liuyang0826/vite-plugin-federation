@@ -4,7 +4,7 @@ import type { ConfigTypeSet, Context } from 'types'
 import { getPackageInfo } from 'local-pkg'
 import type { PluginContext } from 'rollup'
 
-export async function resolveBuildVersion(
+export default async function resolveVersion(
   this: PluginContext,
   context: Context
 ) {
@@ -24,38 +24,36 @@ export async function resolveBuildVersion(
   const dirPaths: string[] = []
   const currentDir = resolve()
 
-  if (context.isHost) {
-    //  try to get every module package.json file
-    for (const arr of context.shared) {
-      if (!arr[1].version && arr[1].packagePath === arr[0]) {
-        let packageJson
-        try {
-          packageJson = (await getPackageInfo(arr[0]))?.packageJson
-        } catch {
-          /* noop */
-        }
-        if (packageJson) {
-          arr[1].version = packageJson.version
+  //  try to get every module package.json file
+  for (const arr of context.shared) {
+    if (!arr[1].version && arr[1].packagePath === arr[0]) {
+      let packageJson
+      try {
+        packageJson = (await getPackageInfo(arr[0]))?.packageJson
+      } catch {
+        /* noop */
+      }
+      if (packageJson) {
+        arr[1].version = packageJson.version
+      } else {
+        arr[1].removed = true
+        const dir = join(currentDir, 'node_modules', arr[0])
+        const dirStat = statSync(dir)
+        if (dirStat.isDirectory()) {
+          collectDirFn(dir, dirPaths)
         } else {
-          arr[1].removed = true
-          const dir = join(currentDir, 'node_modules', arr[0])
-          const dirStat = statSync(dir)
-          if (dirStat.isDirectory()) {
-            collectDirFn(dir, dirPaths)
-          } else {
-            this.error(`cant resolve "${arr[1].packagePath}"`)
-          }
-
-          if (dirPaths.length > 0) {
-            monoRepos.push({ arr: dirPaths, root: arr })
-          }
+          this.error(`cant resolve "${arr[1].packagePath}"`)
         }
 
-        if (!arr[1].removed && !arr[1].version) {
-          this.error(
-            `No description file or no version in description file (usually package.json) of ${arr[0]}. Add version to description file, or manually specify version in shared config.`
-          )
+        if (dirPaths.length > 0) {
+          monoRepos.push({ arr: dirPaths, root: arr })
         }
+      }
+
+      if (!arr[1].removed && !arr[1].version) {
+        this.error(
+          `No description file or no version in description file (usually package.json) of ${arr[0]}. Add version to description file, or manually specify version in shared config.`
+        )
       }
     }
   }
@@ -80,31 +78,6 @@ export async function resolveBuildVersion(
           }
         } catch (e) {
           //    ignore
-        }
-      }
-    }
-  }
-}
-
-export async function resolveServeVersion(
-  this: PluginContext,
-  context: Context
-) {
-  if (context.isHost && !context.isRemote) {
-    for (const arr of context.shared) {
-      if (!arr[1].version && arr[1].packagePath === arr[0]) {
-        let packageJson
-        try {
-          packageJson = (await getPackageInfo(arr[0]))?.packageJson
-        } catch {
-          /* noop */
-        }
-        if (!packageJson) {
-          this.error(
-            `No description file or no version in description file (usually package.json) of ${arr[0]}. Add version to description file, or manually specify version in shared config.`
-          )
-        } else {
-          arr[1].version = packageJson.version
         }
       }
     }
