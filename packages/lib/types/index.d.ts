@@ -312,6 +312,7 @@ declare interface Context {
   isHost: boolean
   isRemote: boolean
   isShared: boolean
+  hasRemote: boolean
   assetsDir?: string
   filename: string
   exposesKeyMap: Map<string, string>

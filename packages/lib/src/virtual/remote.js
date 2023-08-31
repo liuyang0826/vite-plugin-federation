@@ -10,9 +10,11 @@ export const init = (hostSharedModule) => {
     const versionKey = Object.keys(value)[0]
     const versionValue = Object.values(value)[0]
     const scope = versionValue.scope || 'default'
-    globalThis.__federation_shared__[scope] =
-      globalThis.__federation_shared__[scope] || {}
-    const shared = globalThis.__federation_shared__[scope]
-    ;(shared[key] = shared[key] || {})[versionKey] = versionValue
+    const shared = (globalThis.__federation_shared__[scope] =
+      globalThis.__federation_shared__[scope] || {})
+    shared[key] = shared[key] || {}
+    if (!shared[key][versionKey]) {
+      shared[key][versionKey] = versionValue
+    }
   })
 }

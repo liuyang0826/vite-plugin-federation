@@ -34,6 +34,7 @@ export default function federation(
   context.isHost = !!context.remote.length && !context.expose.length
   context.isRemote = !!context.expose.length
   context.isShared = !!context.shared.length
+  context.hasRemote = !!context.remote.length
 
   const remotes: Remote[] = []
   for (const item of context.remote) {
@@ -95,7 +96,9 @@ export default function federation(
       enforce: 'post',
       async buildStart() {
         virtual = createVirtual(context, remotes)
-        await resolveVersion.call(this, context)
+        if (context.hasRemote) {
+          await resolveVersion.call(this, context)
+        }
         if (!context.viteDevServer) {
           emitFiles.call(this, context)
         }
@@ -103,8 +106,8 @@ export default function federation(
       transform(code, id) {
         if (context.isShared) {
           if (
-            id === '\0virtual:__federation_shared' &&
-            (context.isHost || context.isRemote)
+            (context.isHost || context.isRemote) &&
+            id === '\0virtual:__federation_shared'
           ) {
             return injectLocalShared.call(this, context, code)
           }
