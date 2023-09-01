@@ -3,7 +3,7 @@ import type { Plugin } from 'esbuild'
 import { OPTIMIZE_DEPS_NAMESPACE, OPTIMIZE_LOCAL_SUFFIX } from './constants'
 import { resolveModule } from 'local-pkg'
 import { dirname, join } from 'node:path'
-import { Context } from 'types'
+import type { Context } from 'types'
 
 export default function optimizeDepsPlugin(context: Context): Plugin {
   return {
@@ -44,7 +44,7 @@ export default function optimizeDepsPlugin(context: Context): Plugin {
                 resolveDir: dirname(path)
               }
             }
-            const path = join(process.cwd(), shared[1].packagePath)
+            const path = join(process.cwd(), shared[1].packagePath!)
             return {
               contents: readFileSync(path, 'utf-8'),
               resolveDir: dirname(path)

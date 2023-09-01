@@ -1,7 +1,7 @@
 import type { PluginContext } from 'rollup'
 import type { Context } from 'types'
 
-export default function emitFiles(this: PluginContext, context: Context) {
+export default async function emitFiles(this: PluginContext, context: Context) {
   if (context.isRemote) {
     this.emitFile({
       fileName: `${context.assetsDir ? context.assetsDir + '/' : ''}${

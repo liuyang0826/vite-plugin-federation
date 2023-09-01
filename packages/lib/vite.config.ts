@@ -18,7 +18,10 @@ export default defineConfig({
         '@babel/parser',
         'local-pkg',
         '@rollup/plugin-virtual',
-        'defu'
+        'defu',
+        'rollup-plugin-dts',
+        'rollup',
+        'axios'
       ],
       output: {
         minifyInternalExports: false

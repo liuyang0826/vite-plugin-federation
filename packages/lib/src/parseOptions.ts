@@ -35,12 +35,12 @@ export function parseExposeOptions(
     (item) => {
       return {
         import: item,
-        name: undefined
+        types: undefined
       }
     },
     (item) => ({
       import: item.import,
-      name: item.name || undefined
+      types: item.types || undefined
     })
   )
 }

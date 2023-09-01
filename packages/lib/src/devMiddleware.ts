@@ -9,7 +9,9 @@ export default function devMiddleware(
     base,
     build: { assetsDir }
   } = context.viteConfig!
-  const entryURL = `${base}${assetsDir}/${context.filename}`
+  const entryURL = `${base}${assetsDir ? assetsDir + '/' : ''}${
+    context.filename
+  }`
   return function (req, res, next) {
     if (importQueryRE.test(req.url!)) {
       const end = res.end

@@ -13,6 +13,7 @@
 // SPDX-License-Identifier: MulanPSL-2.0
 // *****************************************************************************
 
+export const DEFAULT_DTS = 'federation.d.ts'
 export const DEFAULT_ENTRY_FILENAME = 'remoteEntry.js'
 export const NAME_CHAR_REG = new RegExp('[0-9a-zA-Z@_-]+')
 export const COMMONJS_PROXY_SUFFIX = '?commonjs-proxy'

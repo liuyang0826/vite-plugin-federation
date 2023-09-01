@@ -1,5 +1,5 @@
 import type { Plugin } from 'vite'
-import { DEFAULT_ENTRY_FILENAME } from './constants'
+import { DEFAULT_DTS, DEFAULT_ENTRY_FILENAME } from './constants'
 import {
   parseExposeOptions,
   parseRemoteOptions,
@@ -17,10 +17,16 @@ import { defu } from 'defu'
 import optimizeDepsPlugin from './optimizeDepsPlugin'
 import processEntry from './processEntry'
 import devMiddleware from './devMiddleware'
+import dtsMiddleware from './dtsMiddleware'
+import fetchDeclaration from './fetchDeclaration'
+import { isPackageExists } from 'local-pkg'
+import dtsBuilder from './dtsBuilder'
+import { extname } from 'node:path'
 
 export default function federation(
   options: VitePluginFederationOptions
 ): Plugin[] {
+  let existsTypescript: boolean | null = null
   const context = {
     expose: parseExposeOptions(options),
     shared: parseSharedOptions(options),
@@ -28,7 +34,14 @@ export default function federation(
     get assetsDir() {
       return this.viteConfig?.build.assetsDir
     },
-    filename: options.filename ?? DEFAULT_ENTRY_FILENAME
+    filename: options.filename ?? DEFAULT_ENTRY_FILENAME,
+    dts: options.filename ?? DEFAULT_DTS,
+    get existsTypescript() {
+      if (existsTypescript === null) {
+        existsTypescript = isPackageExists('typescript')
+      }
+      return existsTypescript
+    }
   } as Context
 
   context.isHost = !!context.remote.length && !context.expose.length
@@ -85,10 +98,17 @@ export default function federation(
           }
         })
       },
-      configureServer(server) {
+      async configureServer(server) {
         // get moduleGraph for dev mode dynamic reference
         context.viteDevServer = server
         server.middlewares.use(devMiddleware(context))
+        if (context.isRemote) {
+          const dts = await dtsMiddleware(context)
+          dts && server.middlewares.use(dts)
+        }
+        if (context.hasRemote && context.existsTypescript) {
+          fetchDeclaration(context)
+        }
       }
     },
     {
@@ -126,8 +146,19 @@ export default function federation(
           return transform.call(this, context, code, remotes, id)
         }
       },
-      generateBundle(_, bundle) {
+      async generateBundle(_, bundle) {
         processEntry.call(this, context, bundle)
+
+        if (context.existsTypescript) {
+          const source = await dtsBuilder(context)
+          this.emitFile({
+            type: 'asset',
+            source: source,
+            fileName: `${
+              context.assetsDir ? context.assetsDir + '/' : ''
+            }${context.filename.replace(extname(context.filename), '.d.json')}`
+          })
+        }
       }
     }
   ]

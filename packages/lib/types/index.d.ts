@@ -21,12 +21,6 @@ declare interface VitePluginFederationOptions {
   filename?: string
 
   /**
-   * transform hook need to handle file types
-   * default ['.js','.ts','.jsx','.tsx','.mjs','.cjs','.vue','.svelte']
-   */
-  transformFileTypes?: string[]
-
-  /**
    * Options for library.
    */
   // library?: LibraryOptions
@@ -82,14 +76,15 @@ declare interface VitePluginFederationOptions {
   shared?: Shared
 
   /**
-   * Current operating mode
+   * dts file path
+   * @default ./federation.d.ts
    */
-  mode?: string
+  dts?: string
 }
 
-type Exposes = (string | ExposesObject)[] | ExposesObject
+type Exposes = ExposesObject[] | ExposesObject
 
-type Remotes = (string | RemotesObject)[] | RemotesObject
+type Remotes = RemotesObject[] | RemotesObject
 
 type Shared = (string | SharedObject)[] | SharedObject
 
@@ -108,7 +103,7 @@ declare interface SharedRuntimeInfo {
  * Modules that should be exposed by this container. Property names are used as public paths.
  */
 declare interface ExposesObject {
-  [index: string]: ExposesConfig | string | string[]
+  [index: string]: ExposesConfig | string
 }
 
 /**
@@ -123,7 +118,7 @@ declare interface ExposesConfig {
   /**
    * Custom chunk name for the exposed module.
    */
-  name?: string
+  types?: string
 }
 
 /**
@@ -210,7 +205,7 @@ declare interface LibraryCustomUmdObject {
  * Container locations from which modules should be resolved and loaded at runtime. Property names are used as request scopes.
  */
 declare interface RemotesObject {
-  [index: string]: string | RemotesConfig | string[] | Promise<any>
+  [index: string]: string | RemotesConfig
 }
 
 /**
@@ -306,9 +301,9 @@ declare interface SharedConfig {
 }
 
 declare interface Context {
-  shared: (string | ConfigTypeSet)[]
-  expose: (string | ConfigTypeSet)[]
-  remote: (string | ConfigTypeSet)[]
+  shared: [string, SharedConfig][]
+  expose: [string, ExposesConfig][]
+  remote: [string, RemotesConfig][]
   isHost: boolean
   isRemote: boolean
   isShared: boolean
@@ -319,4 +314,6 @@ declare interface Context {
   shareName2Prop: Map<string, any>
   viteConfig?: ResolvedConfig
   viteDevServer: ViteDevServer
+  dts: string
+  existsTypescript: boolean
 }
