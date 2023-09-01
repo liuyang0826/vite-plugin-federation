@@ -40,6 +40,7 @@ export default async function transform(
   let hasImportRef = false
   let hasImportShared = false
   const optimizeNodes: any[] = []
+  let programPath
 
   traverse.default(ast, {
     enter: ({ node }: any) => {
@@ -338,6 +339,9 @@ export default async function transform(
           '__federation_origin + '
         )
       }
+    },
+    Program(path) {
+      programPath = path
     }
   })
 
@@ -345,138 +349,136 @@ export default async function transform(
 
   const sources = Object.keys(sourceLocalNamesMap)
   if (sources.length || optimizeNodes.length) {
-    traverse.default(ast, {
-      Program(path) {
-        sources.forEach((source) => {
-          sourceLocalNamesMap[source].forEach(({ localName, isDefault }) => {
-            path.scope.bindings[localName].referencePaths.forEach(
-              (referencePath) => {
-                const node = referencePath.node
-                const container = referencePath.container
-                if (
-                  container.type === 'ObjectProperty' &&
-                  container.key.name === container.value.name &&
-                  container.key.start === container.value.start &&
-                  container.key.end === container.value.end
-                ) {
-                  if (isDefault) {
-                    magicString.appendRight(container.key.end, `: ${source}`)
-                  } else {
-                    magicString.appendRight(
-                      container.key.end,
-                      `: __federation_method_importRef(${source}, __federation_var_${node.name})`
-                    )
-                    hasImportRef = true
-                  }
-                } else if (container.type === 'ExportSpecifier') {
-                  if (isDefault) {
-                    if (
-                      container.local.name === container.exported.name &&
-                      container.local.start === container.exported.start &&
-                      container.local.end === container.exported.end
-                    ) {
-                      magicString.overwrite(
-                        node.start,
-                        node.end,
-                        `${source} as ${node.name}`
-                      )
-                    } else {
-                      magicString.overwrite(node.start, node.end, source)
-                    }
-                  } else {
-                    magicString.appendLeft(
-                      container.start,
-                      `const __federation_export_${node.name} = (__federation_method_importRef(${source}, __federation_var_${node.name}));\n`
-                    )
-                    if (
-                      container.local.name === container.exported.name &&
-                      container.local.start === container.exported.start &&
-                      container.local.end === container.exported.end
-                    ) {
-                      magicString.overwrite(
-                        node.start,
-                        node.end,
-                        `__federation_export_${node.name} as ${node.name}`
-                      )
-                    } else {
-                      magicString.overwrite(
-                        node.start,
-                        node.end,
-                        `__federation_export_${node.name}`
-                      )
-                    }
-
-                    hasImportRef = true
-                  }
-                } else if (container.type === 'NewExpression') {
-                  if (isDefault) {
-                    magicString.overwrite(node.start, node.end, source)
-                  } else {
-                    magicString.overwrite(
-                      node.start,
-                      node.end,
-                      `(__federation_method_importRef(${source}, __federation_var_${node.name}))`
-                    )
-                    hasImportRef = true
-                  }
-                } else {
-                  if (isDefault) {
-                    magicString.overwrite(node.start, node.end, source)
-                  } else {
-                    magicString.overwrite(
-                      node.start,
-                      node.end,
-                      `__federation_method_importRef(${source}, __federation_var_${node.name})`
-                    )
-                    hasImportRef = true
-                  }
-                }
-              }
-            )
-          })
-        })
-
-        optimizeNodes.forEach((optimizeNode) => {
-          const name = optimizeNode.declarations[0].id.name
-          path.scope.bindings[name].referencePaths.forEach((referencePath) => {
-            if (referencePath.parentPath.node.type === 'ExportSpecifier') {
-              magicString.appendRight(
-                optimizeNode.end,
-                `\nconst __federation_import_${name} = await ${referencePath.node.name}();\nconst __federation_export_${name} = () => __federation_import_${name};`
-              )
-              const container = referencePath.container
-              if (
-                container.local.name === container.exported.name &&
-                container.local.start === container.exported.start &&
-                container.local.end === container.exported.end
-              ) {
-                // export { require_vue }
-                magicString.overwrite(
-                  referencePath.node.start,
-                  referencePath.node.end,
-                  `__federation_export_${name} as ${referencePath.node.name}`
-                )
-              } else {
-                // export { require_vue as xxx }
-                magicString.overwrite(
-                  referencePath.node.start,
-                  referencePath.node.end,
-                  `__federation_export_${name}`
-                )
-              }
-            } else if (
-              // export require_vue()
-              referencePath.parentPath.node.type === 'CallExpression'
+    sources.forEach((source) => {
+      sourceLocalNamesMap[source].forEach(({ localName, isDefault }) => {
+        programPath.scope.bindings[localName].referencePaths.forEach(
+          (referencePath) => {
+            const node = referencePath.node
+            const container = referencePath.container
+            if (
+              container.type === 'ObjectProperty' &&
+              container.key.name === container.value.name &&
+              container.key.start === container.value.start &&
+              container.key.end === container.value.end
             ) {
+              if (isDefault) {
+                magicString.appendRight(container.key.end, `: ${source}`)
+              } else {
+                magicString.appendRight(
+                  container.key.end,
+                  `: __federation_method_importRef(${source}, __federation_var_${node.name})`
+                )
+                hasImportRef = true
+              }
+            } else if (container.type === 'ExportSpecifier') {
+              if (isDefault) {
+                if (
+                  container.local.name === container.exported.name &&
+                  container.local.start === container.exported.start &&
+                  container.local.end === container.exported.end
+                ) {
+                  magicString.overwrite(
+                    node.start,
+                    node.end,
+                    `${source} as ${node.name}`
+                  )
+                } else {
+                  magicString.overwrite(node.start, node.end, source)
+                }
+              } else {
+                magicString.appendLeft(
+                  container.start,
+                  `const __federation_export_${node.name} = (__federation_method_importRef(${source}, __federation_var_${node.name}));\n`
+                )
+                if (
+                  container.local.name === container.exported.name &&
+                  container.local.start === container.exported.start &&
+                  container.local.end === container.exported.end
+                ) {
+                  magicString.overwrite(
+                    node.start,
+                    node.end,
+                    `__federation_export_${node.name} as ${node.name}`
+                  )
+                } else {
+                  magicString.overwrite(
+                    node.start,
+                    node.end,
+                    `__federation_export_${node.name}`
+                  )
+                }
+
+                hasImportRef = true
+              }
+            } else if (container.type === 'NewExpression') {
+              if (isDefault) {
+                magicString.overwrite(node.start, node.end, source)
+              } else {
+                magicString.overwrite(
+                  node.start,
+                  node.end,
+                  `(__federation_method_importRef(${source}, __federation_var_${node.name}))`
+                )
+                hasImportRef = true
+              }
+            } else {
+              if (isDefault) {
+                magicString.overwrite(node.start, node.end, source)
+              } else {
+                magicString.overwrite(
+                  node.start,
+                  node.end,
+                  `__federation_method_importRef(${source}, __federation_var_${node.name})`
+                )
+                hasImportRef = true
+              }
+            }
+          }
+        )
+      })
+    })
+
+    optimizeNodes.forEach((optimizeNode) => {
+      const name = optimizeNode.declarations[0].id.name
+      programPath.scope.bindings[name].referencePaths.forEach(
+        (referencePath) => {
+          if (referencePath.parentPath.node.type === 'ExportSpecifier') {
+            magicString.appendRight(
+              optimizeNode.end,
+              `\nconst __federation_import_${name} = await ${referencePath.node.name}();\nconst __federation_export_${name} = () => __federation_import_${name};`
+            )
+            const container = referencePath.container
+            if (
+              container.local.name === container.exported.name &&
+              container.local.start === container.exported.start &&
+              container.local.end === container.exported.end
+            ) {
+              // export { require_vue }
               magicString.overwrite(
                 referencePath.node.start,
                 referencePath.node.end,
-                `await ${referencePath.node.name}`
+                `__federation_export_${name} as ${referencePath.node.name}`
+              )
+            } else {
+              // export { require_vue as xxx }
+              magicString.overwrite(
+                referencePath.node.start,
+                referencePath.node.end,
+                `__federation_export_${name}`
               )
             }
-          })
-        })
-      }
+          } else if (
+            // export require_vue()
+            referencePath.parentPath.node.type === 'CallExpression'
+          ) {
+            magicString.overwrite(
+              referencePath.node.start,
+              referencePath.node.end,
+              `await ${referencePath.node.name}`
+            )
+          }
+        }
+      )
     })
   }
 
