@@ -22,8 +22,14 @@ export default defineConfig({
       name: 'team-blue',
       filename: 'remoteEntry-legacy.js',
       exposes: {
-          './BasketInfo': './src/components/BasketInfo.vue',
-          './BuyButton': './src/components/BuyButton.vue',
+          './BasketInfo': {
+            import: './src/components/BasketInfo.vue',
+            types: './temp/components/BasketInfo.vue.d.ts',
+          },
+          './BuyButton': {
+            import: './src/components/BuyButton.vue',
+            types: './temp/components/BuyButton.vue.d.ts'
+          },
       },
       shared: ['vue', 'pinia']
     })

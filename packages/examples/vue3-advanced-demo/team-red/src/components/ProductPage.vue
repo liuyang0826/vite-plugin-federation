@@ -33,7 +33,7 @@ function clickProduct(sku: string) {
 
   </div>
   <BuyButton :item="variant.sku" />
-  <Recommendations/>
+  <Recommendations name="name"/>
 </template>
 
 <style>

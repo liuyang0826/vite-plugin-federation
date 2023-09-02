@@ -5,7 +5,3 @@ declare module '*.vue' {
   const component: DefineComponent<{}, {}, any>
   export default component
 }
-
-declare module "team-blue/*"{}
-
-declare module "team-green/*"{}

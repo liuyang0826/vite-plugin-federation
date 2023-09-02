@@ -5,7 +5,7 @@ const Recommendations = defineAsyncComponent(() => import('./components/Recommen
 
 <template>
   <h1>This is the green team</h1>
-  <Recommendations item="fendt"/>
+  <Recommendations item="fendt" name="name" />
 </template>
 
 <style scoped>

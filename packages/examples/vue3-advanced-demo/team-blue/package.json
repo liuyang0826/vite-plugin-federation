@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --port 5002 --strictPort",
     "build": "vite build",
+    "build:types": "vue-tsc",
     "serve": "vite preview --port 5002 --strictPort",
     "clean": "rm -rf dist",
     "stop": "kill-port --port 5002"

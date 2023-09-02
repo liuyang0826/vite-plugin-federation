@@ -12,7 +12,10 @@ export default defineConfig({
       name: 'team-green',
       filename: 'remoteEntry.js',
       exposes: {
-          './Recommendations': './src/components/Recommendations.vue',
+          './Recommendations': {
+            import: './src/components/Recommendations.vue',
+            types: './temp/components/Recommendations.vue.d.ts',
+          },
       },
       shared: ['vue', 'pinia']
     })

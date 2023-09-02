@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { PropType, ref } from 'vue';
 import { allRecommendations } from '../recos'
 import { currentItemStore } from '../store'
 import GameControllerOutline from '@vicons/ionicons5/GameControllerOutline'
 
+defineProps({
+  name: {type: String as PropType<string>, required: true}
+})
 
 const recommendations = ref<Array<{ image: string; id: string }>>([])
 recommendations.value = allRecommendations['porsche']

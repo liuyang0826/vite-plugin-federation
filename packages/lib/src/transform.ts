@@ -503,7 +503,9 @@ export default async function transform(
   if (magicString.hasChanged()) {
     return {
       code: magicString.toString(),
-      map: magicString.generateMap({ hires: true })
+      map: optimizeNodes.length
+        ? null
+        : magicString.generateMap({ hires: true })
     }
   }
 }
