@@ -30,6 +30,7 @@ export default async function fetchDeclaration(context: Context) {
       return declarations.map(
         ({ name, code }) =>
           `declare module "${normalizePath(join(module, name))}" {\n\t${code
+            .trim()
             .split('\n')
             .join('\n\t')}\n}`
       )
