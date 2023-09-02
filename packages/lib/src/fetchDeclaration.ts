@@ -23,17 +23,19 @@ export default async function fetchDeclaration(context: Context) {
     })
   )
 
-  const codes = res.flatMap((item) => {
-    if (item.status !== 'fulfilled') return ''
-    const { module, declarations } = item.value
-    return declarations.map(
-      ({ name, code }) =>
-        `declare module "${normalizePath(join(module, name))}" {\n\t${code
-          .trim()
-          .split('\n')
-          .join('\n\t')}\n}`
-    )
-  })
+  const codes = res
+    .flatMap((item) => {
+      if (item.status !== 'fulfilled') return ''
+      const { module, declarations } = item.value
+      return declarations.map(
+        ({ name, code }) =>
+          `declare module "${normalizePath(join(module, name))}" {\n\t${code
+            .trim()
+            .split('\n')
+            .join('\n\t')}\n}`
+      )
+    })
+    .filter(Boolean)
 
   if (codes.length) {
     writeFileSync(
