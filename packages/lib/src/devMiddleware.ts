@@ -32,6 +32,30 @@ export default function devMiddleware(
       return next()
     }
 
+    if (
+      [
+        '/@id/__x00__virtual:__federation_shared',
+        '/@id/__x00__virtual:__federation_host'
+      ].includes(req.url!)
+    ) {
+      const end = res.end
+      res.end = function (content, ...args) {
+        return end.call(
+          this,
+          typeof content === 'string'
+            ? content.replace(
+                /import\((.+?)\)\.then\(.+?\),/g,
+                (_, from) => `import(${from}),`
+              )
+            : content,
+          // eslint-disable-next-line
+          // @ts-ignore
+          ...args
+        )
+      }
+      return next()
+    }
+
     if (req.url !== entryURL) return next()
 
     res.writeHead(302, {
