@@ -4,11 +4,14 @@ import type { Context } from 'types'
 
 export default async function dtsBuilder(context: Context) {
   try {
+    const input = context.expose
+      .filter((item) => item[1].types)
+      .map((item) => item[1].types!)
+    if (!input.length) return []
+
     const build = await rollup({
       plugins: [dts()],
-      input: context.expose
-        .filter((item) => item[1].types)
-        .map((item) => item[1].types) as string[]
+      input: input
     })
 
     const { output: outputs } = await build.generate({ format: 'esm' })
@@ -20,8 +23,8 @@ export default async function dtsBuilder(context: Context) {
       }
     })
 
-    return JSON.stringify(body, null, 2)
-  } catch (e) {
-    console.error(e)
+    return body
+  } catch {
+    return []
   }
 }

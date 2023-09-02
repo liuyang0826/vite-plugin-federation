@@ -27,6 +27,6 @@ export default async function dtsMiddleware(
     res.writeHead(200, {
       'Content-Type': 'application/json'
     })
-    res.end(body)
+    res.end(JSON.stringify(body, null, 2))
   }
 }

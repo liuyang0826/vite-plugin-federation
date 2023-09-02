@@ -11,7 +11,7 @@ import injectHostShared from './injectHostShared'
 import injectLocalShared from './injectLocalShared'
 import transform from './transform'
 import resolveVersion from './resolveVersion'
-import emitFiles from './emitFiles'
+import emitFiles, { emitDtsJSON } from './emitFiles'
 import type { Context, VitePluginFederationOptions } from 'types'
 import { defu } from 'defu'
 import optimizeDepsPlugin from './optimizeDepsPlugin'
@@ -20,8 +20,6 @@ import devMiddleware from './devMiddleware'
 import dtsMiddleware from './dtsMiddleware'
 import fetchDeclaration from './fetchDeclaration'
 import { isPackageExists } from 'local-pkg'
-import dtsBuilder from './dtsBuilder'
-import { extname } from 'node:path'
 
 export default function federation(
   options: VitePluginFederationOptions
@@ -148,16 +146,8 @@ export default function federation(
       },
       async generateBundle(_, bundle) {
         processEntry.call(this, context, bundle)
-
         if (context.existsTypescript) {
-          const source = await dtsBuilder(context)
-          this.emitFile({
-            type: 'asset',
-            source: source,
-            fileName: `${
-              context.assetsDir ? context.assetsDir + '/' : ''
-            }${context.filename.replace(extname(context.filename), '.d.json')}`
-          })
+          await emitDtsJSON.call(this, context)
         }
       }
     }
