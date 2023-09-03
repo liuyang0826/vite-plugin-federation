@@ -17,8 +17,6 @@ const hostSharedModule = {
   // hostSharedModule
 }
 
-const initMap = Object.create(null)
-
 async function ensure(remoteId) {
   const remote = remotesMap[remoteId]
   if (!remote.inited) {
@@ -61,13 +59,14 @@ async function ensure(remoteId) {
   }
 }
 
-function getRemote(remoteName, componentName) {
-  return ensure(remoteName).then((remote) =>
-    remote.get(componentName).then((factory) => {
-      const module = factory()
-      return unwrapDefault(module)
-    })
-  )
+const moduleCache = Object.create(null)
+
+async function getRemote(remoteName, componentName) {
+  const map = (moduleCache[remoteName] = moduleCache[remoteName] || {})
+  if (map[componentName]) return map[componentName]
+  const remote = await ensure(remoteName)
+  const factory = await remote.get(componentName)
+  return (map[componentName] = unwrapDefault(factory()))
 }
 
 function setRemote(remoteName, remoteConfig) {
