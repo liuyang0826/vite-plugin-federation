@@ -1,6 +1,6 @@
 import { readdirSync, statSync } from 'node:fs'
 import { basename, join, resolve } from 'node:path'
-import type { ConfigTypeSet, Context } from 'types'
+import type { Context, SharedConfig } from 'types'
 import { getPackageInfo } from 'local-pkg'
 import type { PluginContext } from 'rollup'
 
@@ -20,9 +20,10 @@ export default async function resolveVersion(
     })
   }
 
-  const monoRepos: { arr: string[]; root: string | ConfigTypeSet }[] = []
+  const monoRepos: { arr: string[]; root: [string, SharedConfig] }[] = []
   const dirPaths: string[] = []
   const currentDir = resolve()
+  const removedMap: Record<string, boolean> = {}
 
   //  try to get every module package.json file
   for (const arr of context.shared) {
@@ -36,7 +37,7 @@ export default async function resolveVersion(
       if (packageJson) {
         arr[1].version = packageJson.version
       } else {
-        arr[1].removed = true
+        removedMap[arr[0]] = true
         const dir = join(currentDir, 'node_modules', arr[0])
         const dirStat = statSync(dir)
         if (dirStat.isDirectory()) {
@@ -50,7 +51,7 @@ export default async function resolveVersion(
         }
       }
 
-      if (!arr[1].removed && !arr[1].version) {
+      if (!removedMap[arr[0]] && !arr[1].version) {
         this.error(
           `No description file or no version in description file (usually package.json) of ${arr[0]}. Add version to description file, or manually specify version in shared config.`
         )
@@ -58,7 +59,7 @@ export default async function resolveVersion(
     }
   }
 
-  context.shared = context.shared.filter((item) => !item[1].removed)
+  context.shared = context.shared.filter((item) => !removedMap[item[0]])
   // assign version to monoRepo
   if (monoRepos.length > 0) {
     for (const monoRepo of monoRepos) {

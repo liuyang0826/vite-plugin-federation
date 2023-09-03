@@ -1,14 +1,11 @@
 import type {
-  ConfigTypeSet,
   Exposes,
   Remotes,
   Shared,
   VitePluginFederationOptions
 } from 'types'
 
-export function parseSharedOptions(
-  options: VitePluginFederationOptions
-): (string | ConfigTypeSet)[] {
+export function parseSharedOptions(options: VitePluginFederationOptions) {
   return parseOptions(
     options.shared || {},
     (_, key) => ({
@@ -27,9 +24,7 @@ export function parseSharedOptions(
   )
 }
 
-export function parseExposeOptions(
-  options: VitePluginFederationOptions
-): (string | ConfigTypeSet)[] {
+export function parseExposeOptions(options: VitePluginFederationOptions) {
   return parseOptions(
     options.exposes,
     (item) => {
@@ -45,19 +40,17 @@ export function parseExposeOptions(
   )
 }
 
-export function parseRemoteOptions(
-  options: VitePluginFederationOptions
-): (string | ConfigTypeSet)[] {
+export function parseRemoteOptions(options: VitePluginFederationOptions) {
   return parseOptions(
     options.remotes ? options.remotes : {},
     (item) => ({
-      external: Array.isArray(item) ? item : [item],
+      external: item,
       shareScope: options.shareScope || 'default',
-      format: 'esm',
-      externalType: 'url'
+      format: 'esm' as const,
+      externalType: 'url' as const
     }),
     (item) => ({
-      external: Array.isArray(item.external) ? item.external : [item.external],
+      external: item.external,
       shareScope: item.shareScope || options.shareScope || 'default',
       format: item.format || 'esm',
       externalType: item.externalType || 'url'
@@ -65,41 +58,57 @@ export function parseRemoteOptions(
   )
 }
 
-export function parseOptions(
-  options: Exposes | Remotes | Shared | undefined,
-  normalizeSimple: (value: any, key: any) => ConfigTypeSet,
-  normalizeOptions: (value: any, key: any) => ConfigTypeSet
-): (string | ConfigTypeSet)[] {
+type ConfigObject<T> = Exclude<T, any[]> extends {
+  [index: string]: infer R
+}
+  ? R
+  : never
+
+type ConfigArray<T> = T extends (infer R)[] ? R[] : never
+
+export function parseOptions<T extends Exposes | Remotes | Shared>(
+  options: T | undefined,
+  normalizeSimple: (
+    value: string,
+    key: string
+  ) => Exclude<ConfigObject<T>, string>,
+  normalizeOptions: (
+    value: Exclude<ConfigObject<T>, string>,
+    key: string
+  ) => Exclude<ConfigObject<T>, string>
+) {
   if (!options) {
     return []
   }
-  const list: {
-    [index: number]: string | ConfigTypeSet
-  }[] = []
-  const array = (items: (string | ConfigTypeSet)[]) => {
+  const list: [string, Exclude<ConfigObject<T>, string>][] = []
+  const array = (items: ConfigArray<T>) => {
     for (const item of items) {
       if (typeof item === 'string') {
         list.push([item, normalizeSimple(item, item)])
-      } else if (item && typeof item === 'object') {
-        object(item)
+      } else if (typeof item === 'object') {
+        object(item as Exclude<T, any[]>)
       } else {
         throw new Error('Unexpected options format')
       }
     }
   }
-  const object = (obj) => {
-    for (const [key, value] of Object.entries(obj)) {
-      if (typeof value === 'string' || Array.isArray(value)) {
+  const object = (obj: Exclude<T, any[]>) => {
+    Object.keys(obj).forEach((key) => {
+      const value = obj[key as keyof T]
+      if (typeof value === 'string') {
         list.push([key, normalizeSimple(value, key)])
       } else {
-        list.push([key, normalizeOptions(value, key)])
+        list.push([
+          key,
+          normalizeOptions(value as Exclude<ConfigObject<T>, string>, key)
+        ])
       }
-    }
+    })
   }
   if (Array.isArray(options)) {
-    array(options)
+    array(options as unknown as ConfigArray<T>)
   } else if (typeof options === 'object') {
-    object(options)
+    object(options as Exclude<T, any[]>)
   } else {
     throw new Error('Unexpected options format')
   }

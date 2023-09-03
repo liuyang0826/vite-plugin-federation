@@ -36,7 +36,7 @@ export type Remote = { id: string; regexp: RegExp; config: RemotesConfig }
 
 export function createRemotesMap(remotes: Remote[]): string {
   const createUrl = (remote: Remote) => {
-    const external = remote.config.external[0]
+    const external = remote.config.external
     const externalType = remote.config.externalType
     if (externalType === 'promise') {
       return `() => ${external}`

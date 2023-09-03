@@ -88,8 +88,6 @@ type Remotes = RemotesObject[] | RemotesObject
 
 type Shared = (string | SharedObject)[] | SharedObject
 
-type ConfigTypeSet = ExposesConfig | RemotesConfig | SharedConfig
-
 declare interface SharedRuntimeInfo {
   id: string
   dependencies: string[]
