@@ -44,16 +44,12 @@ export function parseRemoteOptions(options: VitePluginFederationOptions) {
   return parseOptions(
     options.remotes ? options.remotes : {},
     (item) => ({
-      external: item,
-      shareScope: options.shareScope || 'default',
-      format: 'esm' as const,
-      externalType: 'url' as const
+      url: item,
+      format: 'esm' as const
     }),
     (item) => ({
-      external: item.external,
-      shareScope: item.shareScope || options.shareScope || 'default',
-      format: item.format || 'esm',
-      externalType: item.externalType || 'url'
+      url: item.url,
+      format: item.format || 'esm'
     })
   )
 }

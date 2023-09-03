@@ -1,14 +1,13 @@
 import { unwrapDefault } from '__federation_utils'
 const remotesMap = {
-  // remotesMap
+  // remotesMapCode
 }
 const loadJS = async (url, fn) => {
-  const resolvedUrl = typeof url === 'function' ? await url() : url
   // eslint-disable-next-line no-undef
   const script = document.createElement('script')
   script.type = 'text/javascript'
   script.onload = fn
-  script.src = resolvedUrl
+  script.src = url
   // eslint-disable-next-line no-undef
   document.getElementsByTagName('head')[0].appendChild(script)
 }
@@ -36,22 +35,14 @@ async function ensure(remoteId) {
       })
     } else if (['esm', 'systemjs'].includes(remote.format)) {
       // loading js with import(...)
-      return new Promise((resolve, reject) => {
-        const getUrl =
-          typeof remote.url === 'function' ? remote.url : () => remote.url
-        Promise.resolve(getUrl()).then((url) => {
-          import(/* @vite-ignore */ url)
-            .then((lib) => {
-              if (!remote.inited) {
-                lib.init(hostSharedModule)
-                remote.lib = lib
-                remote.lib.init(hostSharedModule)
-                remote.inited = true
-              }
-              resolve(remote.lib)
-            })
-            .catch(reject)
-        })
+      return import(/* @vite-ignore */ remote.url).then((lib) => {
+        if (!remote.inited) {
+          lib.init(hostSharedModule)
+          remote.lib = lib
+          remote.lib.init(hostSharedModule)
+          remote.inited = true
+        }
+        return remote.lib
       })
     }
   } else {

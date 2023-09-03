@@ -3,14 +3,19 @@ import host from './host.js?raw'
 import shared from './shared.js?raw'
 import remote from './remote.js?raw'
 import utils from './utils.js?raw'
-import { Remote, createRemotesMap, str } from '../utils'
+import { str } from '../utils'
 import type { Context } from 'types'
 
-export default function createVirtual(context: Context, remotes: Remote[]) {
-  const __federation_host = host.replace(
-    '// remotesMap',
-    createRemotesMap(remotes)
-  )
+export default function createVirtual(context: Context) {
+  const remotesMapCode = context.remote
+    .map((item) => {
+      return `${str(item[0])}: { url: ${str(item[1].url)}, format: ${str(
+        item[1].format
+      )} }`
+    })
+    .join(',\n  ')
+
+  const __federation_host = host.replace('// remotesMapCode', remotesMapCode)
 
   let __federation_remote = remote
   const moduleMapCode = context.expose.map((item) => {

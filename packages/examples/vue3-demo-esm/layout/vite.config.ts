@@ -16,12 +16,10 @@ export default defineConfig({
             filename: 'remoteEntry.js',
             remotes: {
                 home: {
-                    external: `Promise.resolve('http://localhost:5001/assets/remoteEntry.js')`,
-                    externalType: "promise"
+                    external: 'http://localhost:5001/assets/remoteEntry.js',
                 },
                 'common-lib': {
-                    external:`new Promise(resolve=>resolve('http://localhost:5002/assets/remoteEntry.js'))`,
-                    externalType:"promise"
+                    external:'http://localhost:5002/assets/remoteEntry.js',
                 },
                 'css-modules': 'http://localhost:5003/assets/remoteEntry.js'
             },

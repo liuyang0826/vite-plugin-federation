@@ -6,10 +6,12 @@ const localSharedModule = {
   // localSharedModule
 }
 const moduleCache = Object.create(null)
-async function importShared(name, shareScope) {
-  return moduleCache[name]
-    ? new Promise((r) => r(moduleCache[name]))
-    : (await getSharedFromRuntime(name, shareScope)) || getSharedFromLocal(name)
+function importShared(name, shareScope) {
+  return (
+    moduleCache[name] ||
+    getSharedFromRuntime(name, shareScope) ||
+    getSharedFromLocal(name)
+  )
 }
 async function getSharedFromRuntime(name, shareScope) {
   let module = null
@@ -48,11 +50,12 @@ async function getSharedFromLocal(name) {
     )
   }
 }
-async function importSharedDev(name, shareScope, get) {
-  return moduleCache[name]
-    ? new Promise((r) => r(moduleCache[name]))
-    : (await getSharedFromRuntime(name, shareScope)) ||
-        getSharedFromLocalDev(name, get)
+function importSharedDev(name, shareScope, get) {
+  return (
+    moduleCache[name] ||
+    getSharedFromRuntime(name, shareScope) ||
+    getSharedFromLocalDev(name, get)
+  )
 }
 async function getSharedFromLocalDev(name, get) {
   if (localSharedModule[name]?.import) {

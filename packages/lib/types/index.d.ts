@@ -31,31 +31,6 @@ declare interface VitePluginFederationOptions {
   name?: string
 
   /**
-   * The external type of the remote containers.
-   */
-  remoteType?:
-    | 'var'
-    | 'module'
-    | 'assign'
-    | 'this'
-    | 'window'
-    | 'self'
-    | 'global'
-    | 'commonjs'
-    | 'commonjs2'
-    | 'commonjs-module'
-    | 'amd'
-    | 'amd-require'
-    | 'umd'
-    | 'umd2'
-    | 'jsonp'
-    | 'system'
-    | 'promise'
-    | 'import'
-    | 'script'
-    | 'node-commonjs'
-
-  /**
    * Container locations and request scopes from which modules should be resolved and loaded at runtime. When provided, property name is used as request scope, otherwise request scope is automatically inferred from container location.
    */
   remotes?: Remotes
@@ -213,17 +188,7 @@ declare interface RemotesConfig {
   /**
    * Container locations from which modules should be resolved and loaded at runtime.
    */
-  external: string
-
-  /**
-   * The format of the specified external
-   */
-  externalType: 'url' | 'promise'
-
-  /**
-   * The name of the share scope shared with this remote.
-   */
-  shareScope?: string
+  url: string
 
   /**
    * the remote format
@@ -314,4 +279,5 @@ declare interface Context {
   viteDevServer: ViteDevServer
   dts: string
   existsTypescript: boolean
+  remoteRegExps: RegExp[]
 }
