@@ -4,7 +4,7 @@ import type { File } from '@babel/types'
 import { parse } from '@babel/parser'
 import type { Context } from 'types'
 import MagicString from 'magic-string'
-import { str, type Remote } from './utils'
+import { str } from './utils'
 import { dirname, join } from 'node:path'
 import { existsSync, readFileSync } from 'node:fs'
 import {
@@ -18,7 +18,6 @@ export default async function transform(
   this: TransformPluginContext,
   context: Context,
   code: string,
-  remotes: Remote[],
   id: string
 ) {
   let ast: ParseResult<File> | null = null
@@ -91,13 +90,16 @@ export default async function transform(
           }
 
           if (moduleId.indexOf('/') > -1) {
-            const remote = remotes.find((r) => r.regexp.test(moduleId))
-            if (remote) {
+            const remoteIndex = context.remoteRegExps.findIndex((r) =>
+              r.test(moduleId)
+            )
+            if (remoteIndex !== -1) {
+              const remote = context.remote[remoteIndex]
               const afterImportName = `__federation_var_${moduleId.replace(
                 /[@/\\.-]/g,
                 ''
               )}`
-              const modName = `.${moduleId.slice(remote.id.length)}`
+              const modName = `.${moduleId.slice(remote[0].length)}`
               switch (node.type) {
                 case 'ImportDeclaration': {
                   if (!hasStaticImported.has(moduleId)) {
@@ -106,7 +108,7 @@ export default async function transform(
                       node.start,
                       node.end,
                       `const ${afterImportName} = await __federation_method_getRemote(${str(
-                        remote.id
+                        remote[0]
                       )} , ${str(modName)});`
                     )
                     hasGetRemote = true
@@ -154,7 +156,7 @@ export default async function transform(
                       node.start,
                       node.end,
                       `const ${afterImportName} = await __federation_method_getRemote(${str(
-                        remote.id
+                        remote[0]
                       )}, ${str(modName)});`
                     )
                     hasGetRemote = true
@@ -298,13 +300,16 @@ export default async function transform(
       if (!moduleId) return
 
       if (moduleId.indexOf('/') > -1) {
-        const remote = remotes.find((r) => r.regexp.test(moduleId))
-        if (remote) {
-          const modName = `.${moduleId.slice(remote.id.length)}`
+        const remoteIndex = context.remoteRegExps.findIndex((r) =>
+          r.test(moduleId)
+        )
+        if (remoteIndex !== -1) {
+          const remote = context.remote[remoteIndex]
+          const modName = `.${moduleId.slice(remote[0].length)}`
           magicString.overwrite(
             container.start,
             container.end,
-            `__federation_method_getRemote(${str(remote.id)} , ${str(modName)})`
+            `__federation_method_getRemote(${str(remote[0])} , ${str(modName)})`
           )
           hasGetRemote = true
         }

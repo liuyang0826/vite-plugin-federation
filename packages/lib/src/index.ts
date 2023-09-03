@@ -5,7 +5,6 @@ import {
   parseRemoteOptions,
   parseSharedOptions
 } from './parseOptions'
-import { Remote } from './utils'
 import createVirtual from './virtual/createVirtual'
 import injectHostShared from './injectHostShared'
 import injectLocalShared from './injectLocalShared'
@@ -25,6 +24,7 @@ export default function federation(
   options: VitePluginFederationOptions
 ): Plugin[] {
   let existsTypescript: boolean | null = null
+  let remoteRegExps: RegExp[] | null = null
   const context = {
     expose: parseExposeOptions(options),
     shared: parseSharedOptions(options),
@@ -39,22 +39,21 @@ export default function federation(
         existsTypescript = isPackageExists('typescript')
       }
       return existsTypescript
+    },
+    get remoteRegExps() {
+      if (remoteRegExps === null) {
+        remoteRegExps = context.remote.map(
+          (item) => new RegExp(`^${item[0]}/.+?`)
+        )
+      }
+      return remoteRegExps
     }
   } as Context
 
-  context.isHost = !!context.remote.length && !context.expose.length
+  context.isHost = !!options.remotes && !context.expose.length
   context.isRemote = !!context.expose.length
   context.isShared = !!context.shared.length
   context.hasRemote = !!context.remote.length
-
-  const remotes: Remote[] = []
-  for (const item of context.remote) {
-    remotes.push({
-      id: item[0],
-      regexp: new RegExp(`^${item[0]}/.+?`),
-      config: item[1]
-    })
-  }
 
   let virtual
   return [
@@ -105,7 +104,11 @@ export default function federation(
           dts && server.middlewares.use(dts)
         }
         if (context.hasRemote && context.existsTypescript) {
-          fetchDeclaration(context)
+          const printUrls = server.printUrls
+          server.printUrls = function () {
+            printUrls.call(this)
+            fetchDeclaration(context, server)
+          }
         }
       }
     },
@@ -113,7 +116,7 @@ export default function federation(
       name: 'federation:build',
       enforce: 'post',
       async buildStart() {
-        virtual = createVirtual(context, remotes)
+        virtual = createVirtual(context)
         if (context.hasRemote) {
           await resolveVersion.call(this, context)
         }
@@ -141,7 +144,7 @@ export default function federation(
           )
         }
         if (context.isHost || context.isRemote) {
-          return transform.call(this, context, code, remotes, id)
+          return transform.call(this, context, code, id)
         }
       },
       async generateBundle(_, bundle) {
