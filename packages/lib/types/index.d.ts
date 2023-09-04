@@ -155,22 +155,17 @@ declare interface SharedConfig {
   /**
    * Allow only a single version of the shared module in share scope (disabled by default).
    */
-  // singleton?: boolean
+  singleton?: boolean
 
   /**
    * Do not accept shared module if version is not valid (defaults to yes, if local fallback module is available and shared module is not a singleton, otherwise no, has no effect if there is no required version specified).
    */
-  // strictVersion?: boolean
+  strictVersion?: boolean
 
   /**
    * Version of the provided module. Will replace lower matching versions, but not higher.
    */
   version?: string | false
-
-  /**
-   * determine whether to include the shared in the chunk, true is included, false will not generate a shared chunk, only the remote side of the parameter is valid, the host side will definitely generate a shared chunk
-   */
-  generate?: boolean
 }
 
 declare interface Context {
@@ -190,4 +185,5 @@ declare interface Context {
   dts: string
   existsTypescript: boolean
   remoteRegExps: RegExp[]
+  shareScope: string
 }

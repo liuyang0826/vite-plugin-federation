@@ -10,15 +10,18 @@ export function parseSharedOptions(options: VitePluginFederationOptions) {
     options.shared || {},
     (_, key) => ({
       import: true,
-      shareScope: 'default',
+      shareScope: options.shareScope,
       packagePath: key,
-      generate: true
+      generate: true,
+      singleton: false,
+      strictVersion: true
     }),
     (value, key) => {
       value.import = value.import ?? true
-      value.shareScope = value.shareScope || 'default'
+      value.shareScope = value.shareScope || options.shareScope
       value.packagePath = value.packagePath || key
-      value.generate = value.generate ?? true
+      value.singleton = value.singleton ?? false
+      value.strictVersion = value.strictVersion ?? true
       return value
     }
   )
@@ -44,11 +47,12 @@ export function parseRemoteOptions(options: VitePluginFederationOptions) {
   return parseOptions(
     options.remotes ? options.remotes : {},
     (item) => ({
-      url: item,
+      external: item,
       format: 'esm' as const
     }),
     (item) => ({
-      url: item.url,
+      external: item.external,
+      shareScope: item.shareScope,
       format: item.format || 'esm'
     })
   )

@@ -15,12 +15,10 @@ export default defineConfig({
             filename: 'remoteEntry.js',
             remotes: {
                 remoteA: {
-                    external: `Promise.resolve('http://localhost:5001/assets/remoteEntry.js')`,
-                    externalType: "promise"
+                    external: 'http://localhost:5001/assets/remoteEntry.js'
                 },
                 remoteB: {
-                    external: `Promise.resolve('http://localhost:5002/assets/remoteEntry.js')`,
-                    externalType: "promise"
+                    external: 'http://localhost:5002/assets/remoteEntry.js'
                 },
             },
             shared: {

@@ -1,20 +1,18 @@
+import { sharedScope, install } from '__federation_shared'
 let moduleMap = {
   // moduleMapCode
 }
 export const get = (module) => {
   return moduleMap[module]()
 }
-export const init = (hostSharedModule) => {
-  globalThis.__federation_shared__ = globalThis.__federation_shared__ || {}
-  Object.entries(hostSharedModule).forEach(([key, value]) => {
-    const versionKey = Object.keys(value)[0]
-    const versionValue = Object.values(value)[0]
-    const scope = versionValue.scope || 'default'
-    const shared = (globalThis.__federation_shared__[scope] =
-      globalThis.__federation_shared__[scope] || {})
-    shared[key] = shared[key] || {}
-    if (!shared[key][versionKey]) {
-      shared[key][versionKey] = versionValue
-    }
-  })
+
+const name = 'shareScopeName'
+export const init = (shareScope) => {
+  const oldScope = sharedScope[name]
+  if (oldScope && oldScope !== shareScope)
+    throw new Error(
+      'Container initialization failed as it has already been initialized with a different share scope'
+    )
+  sharedScope[name] = shareScope
+  return install(name)
 }

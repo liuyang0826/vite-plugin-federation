@@ -14,12 +14,11 @@ export default defineConfig({
                 './Button': './src/components/Button.vue'
             },
             shared: {
-                vue: {generate: false},
-                pinia: {generate: false},
+                vue: {import: false},
+                pinia: {import: false},
                 myStore: {
                     packagePath: './src/store.js',
-                    import: false,
-                    generate: false
+                    import: false
                 }
             }
         }),

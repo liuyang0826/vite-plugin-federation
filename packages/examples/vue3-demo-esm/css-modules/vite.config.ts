@@ -23,7 +23,7 @@ export default defineConfig({
       },
       shared: {
         vue:{
-          generate:false
+          import:false
         }
       }
     }),

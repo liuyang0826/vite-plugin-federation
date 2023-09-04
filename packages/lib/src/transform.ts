@@ -245,7 +245,7 @@ export default async function transform(
                   hasStaticImported.set(moduleId, afterImportName)
                   const line = `const ${afterImportName} = await __federation_method_importShared(${str(
                     moduleId
-                  )}, ${str(shared[1].shareScope)});\n`
+                  )});\n`
                   magicString.prepend(line)
                   hasImportShared = true
                 }
@@ -257,7 +257,7 @@ export default async function transform(
                   hasStaticImported.set(moduleId, afterImportName)
                   const line = `const ${afterImportName} = await __federation_method_importShared(${str(
                     moduleId
-                  )}, ${str(shared[1].shareScope)});\n`
+                  )});\n`
                   magicString.prepend(line)
                   hasImportShared = true
                 }
@@ -322,9 +322,7 @@ export default async function transform(
         magicString.overwrite(
           container.start,
           container.end,
-          `__federation_method_importShared(${str(moduleId)}, ${str(
-            shared[1].shareScope
-          )})`
+          `__federation_method_importShared(${str(moduleId)})`
         )
         hasImportShared = true
       }

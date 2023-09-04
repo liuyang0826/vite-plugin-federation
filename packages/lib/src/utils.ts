@@ -14,7 +14,6 @@
 // *****************************************************************************
 
 import { dirname, posix, relative, win32 } from 'node:path'
-import type { RemotesConfig } from '../types'
 
 const letterReg = new RegExp('[0-9a-zA-Z]+')
 

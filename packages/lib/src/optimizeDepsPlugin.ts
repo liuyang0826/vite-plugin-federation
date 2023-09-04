@@ -54,9 +54,7 @@ export default function optimizeDepsPlugin(context: Context): Plugin {
           const contents = `
 const { importSharedDev } = require('__federation_shared');
 const local = () => require('${args.path}${OPTIMIZE_LOCAL_SUFFIX}');
-module.exports = importSharedDev('${args.path}', '${
-            shareds.find((item) => item[0] === args.path)![1].shareScope
-          }', local)
+module.exports = importSharedDev('${args.path}', local)
           `
           return { contents }
         }

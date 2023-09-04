@@ -4,7 +4,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   build: {
     lib: {
-      entry: ['./src/index.ts', 'src/semver/satisfy.ts'],
+      entry: ['./src/index.ts'],
       formats: ['es', 'cjs']
     },
     target: 'node14',

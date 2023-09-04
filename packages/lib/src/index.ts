@@ -6,8 +6,7 @@ import {
   parseSharedOptions
 } from './parseOptions'
 import createVirtual from './virtual/createVirtual'
-import injectHostShared from './injectHostShared'
-import injectLocalShared from './injectLocalShared'
+import injectShared from './injectShared'
 import transform from './transform'
 import resolveVersion from './resolveVersion'
 import emitFiles, { emitDtsJSON } from './emitFiles'
@@ -47,7 +46,8 @@ export default function federation(
         )
       }
       return remoteRegExps
-    }
+    },
+    shareScope: options.shareScope ?? 'default'
   } as Context
 
   context.isHost = !!options.remotes && !context.expose.length
@@ -117,24 +117,16 @@ export default function federation(
       enforce: 'post',
       async buildStart() {
         virtual = createVirtual(context)
-        if (context.hasRemote) {
-          await resolveVersion.call(this, context)
-        }
+        // if (context.hasRemote) {
+        await resolveVersion.call(this, context)
+        // }
         if (!context.viteDevServer) {
           emitFiles.call(this, context)
         }
       },
       transform(code, id) {
-        if (context.isShared) {
-          if (
-            (context.isHost || context.isRemote) &&
-            id === '\0virtual:__federation_shared'
-          ) {
-            return injectLocalShared.call(this, context, code)
-          }
-          if (id === '\0virtual:__federation_host') {
-            return injectHostShared.call(this, context, code)
-          }
+        if (id === '\0virtual:__federation_shared') {
+          return injectShared.call(this, context, code)
         }
         if (code.startsWith(`export default "__VITE_ASSET__`)) {
           return code.replace(
