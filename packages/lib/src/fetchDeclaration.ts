@@ -17,8 +17,8 @@ export default async function fetchDeclaration(
   server: ViteDevServer
 ) {
   const res = await Promise.allSettled(
-    context.remote.map(async ([module, { url }]) => {
-      url = url.replace(extname(url), '.d.json')
+    context.remote.map(async ([module, { external }]) => {
+      let url = external.replace(extname(external), '.d.json')
       if (!/https?:\/\//.test(url)) {
         const local = server.resolvedUrls?.local[0]
         if (!local) return { module: module, declarations: [] }

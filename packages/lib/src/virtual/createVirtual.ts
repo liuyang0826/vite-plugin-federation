@@ -9,9 +9,9 @@ import type { Context } from 'types'
 export default function createVirtual(context: Context) {
   const remotesMapCode = context.remote
     .map((item) => {
-      return `${str(item[0])}: { url: ${str(item[1].url)}, format: ${str(
-        item[1].format
-      )} }`
+      return `${str(item[0])}: { external: ${str(
+        item[1].external
+      )}, format: ${str(item[1].format)} }`
     })
     .join(',\n  ')
 

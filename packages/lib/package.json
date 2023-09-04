@@ -14,6 +14,9 @@
     "./satisfy": {
       "import": "./dist/satisfy.mjs",
       "require": "./dist/satisfy.js"
+    },
+    "./client": {
+      "types": "./client.d.ts"
     }
   },
   "files": [

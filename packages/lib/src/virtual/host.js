@@ -31,11 +31,11 @@ async function ensure(remoteId) {
           }
           resolve(remote.lib)
         }
-        return loadJS(remote.url, callback)
+        return loadJS(remote.external, callback)
       })
     } else if (['esm', 'systemjs'].includes(remote.format)) {
       // loading js with import(...)
-      return import(/* @vite-ignore */ remote.url).then((lib) => {
+      return import(/* @vite-ignore */ remote.external).then((lib) => {
         if (!remote.inited) {
           lib.init(hostSharedModule)
           remote.lib = lib

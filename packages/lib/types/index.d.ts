@@ -2,7 +2,6 @@
  * The following code is adapted from https://github.com/webpack/webpack/types.d.ts
  * MIT License https://github.com/webpack/webpack/LICENSE
  */
-import { RenderedChunk } from 'rollup'
 import { ResolvedConfig, ViteDevServer, Plugin } from 'vite'
 
 export default function federation(
@@ -19,11 +18,6 @@ declare interface VitePluginFederationOptions {
    * The filename of the container as relative path inside the `output.path` directory.
    */
   filename?: string
-
-  /**
-   * Options for library.
-   */
-  // library?: LibraryOptions
 
   /**
    * The name of the container.
@@ -63,15 +57,6 @@ type Remotes = RemotesObject[] | RemotesObject
 
 type Shared = (string | SharedObject)[] | SharedObject
 
-declare interface SharedRuntimeInfo {
-  id: string
-  dependencies: string[]
-  fileName: string
-  fileDir: string
-  filePath: string
-  chunk: RenderedChunk
-}
-
 /**
  * Modules that should be exposed by this container. Property names are used as public paths.
  */
@@ -95,86 +80,6 @@ declare interface ExposesConfig {
 }
 
 /**
- * Options for library.
- */
-declare interface LibraryOptions {
-  /**
-   * Add a comment in the UMD wrapper.
-   *
-   */
-  auxiliaryComment?: string | LibraryCustomUmdCommentObject
-
-  /**
-   * Specify which export should be exposed as library.
-   *
-   */
-  export?: string | string[]
-
-  /**
-   * The name of the library (some types allow unnamed libraries too).
-   *
-   */
-  name?: string | string[] | LibraryCustomUmdObject
-
-  /**
-   * Type of library (types included by default are 'var', 'module', 'assign', 'assign-properties', 'this', 'window', 'self', 'global', 'commonjs', 'commonjs2', 'commonjs-module', 'amd', 'amd-require', 'umd', 'umd2', 'jsonp', 'system', but others might be added by plugins).
-   *
-   */
-  type: string
-
-  /**
-   * If `output.libraryTarget` is set to umd and `output.library` is set, setting this to true will name the AMD module.
-   *
-   */
-  umdNamedDefine?: boolean
-}
-
-/**
- * Set explicit comments for `commonjs`, `commonjs2`, `amd`, and `root`.
- */
-declare interface LibraryCustomUmdCommentObject {
-  /**
-   * Set comment for `amd` section in UMD.
-   */
-  amd?: string
-
-  /**
-   * Set comment for `commonjs` (exports) section in UMD.
-   */
-  commonjs?: string
-
-  /**
-   * Set comment for `commonjs2` (module.exports) section in UMD.
-   */
-  commonjs2?: string
-
-  /**
-   * Set comment for `root` (global variable) section in UMD.
-   */
-  root?: string
-}
-
-/**
- * Description object for all UMD variants of the library name.
- */
-declare interface LibraryCustomUmdObject {
-  /**
-   * Name of the exposed AMD library in the UMD.
-   */
-  amd?: string
-
-  /**
-   * Name of the exposed commonjs export in the UMD.
-   */
-  commonjs?: string
-
-  /**
-   * Name of the property exposed globally by a UMD library.
-   */
-  root?: string | string[]
-}
-
-/**
  * Container locations from which modules should be resolved and loaded at runtime. Property names are used as request scopes.
  */
 declare interface RemotesObject {
@@ -188,7 +93,12 @@ declare interface RemotesConfig {
   /**
    * Container locations from which modules should be resolved and loaded at runtime.
    */
-  url: string
+  external: string
+
+  /**
+   * The name of the share scope shared with this remote.
+   */
+  shareScope?: string
 
   /**
    * the remote format
