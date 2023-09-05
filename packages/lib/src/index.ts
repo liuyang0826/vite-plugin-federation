@@ -76,7 +76,9 @@ export default function federation(
           .map((item) => item[0])
           .concat(
             context.shared
-              .filter((item) => item[0] !== item[1].packagePath)
+              .filter(
+                (item) => item[0] !== item[1].packagePath || !item[1].import
+              )
               .map((item) => item[0])
           )
 

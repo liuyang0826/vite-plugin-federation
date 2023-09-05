@@ -60,15 +60,12 @@ export default function injectShared(
     }
     if (item[1].import) {
       fn += 'Fallback'
+      args.push(
+        `() => import(${str(item[1].packagePath)}).then(module => () => module)`
+      )
     }
 
-    return `${str(item[0])}: () => ${fn}(${args.join(', ')}, ${
-      item[1].import
-        ? `() => import(${str(
-            item[1].packagePath
-          )}).then(module => () => module),`
-        : ''
-    })`
+    return `${str(item[0])}: () => ${fn}(${args.join(', ')})`
   })
 
   return sharedConsumerMapCode.length
