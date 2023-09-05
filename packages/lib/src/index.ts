@@ -9,10 +9,9 @@ import createVirtual from './virtual/createVirtual'
 import injectShared from './injectShared'
 import transform from './transform'
 import resolveVersion from './resolveVersion'
-import emitFiles, { emitDtsJSON } from './emitFiles'
+import { emitRemoteEntry, emitDtsJSON } from './emitFiles'
 import type { Context, VitePluginFederationOptions } from 'types'
 import { defu } from 'defu'
-import optimizeDepsPlugin from './optimizeDepsPlugin'
 import processEntry from './processEntry'
 import devMiddleware from './devMiddleware'
 import dtsMiddleware from './dtsMiddleware'
@@ -50,11 +49,6 @@ export default function federation(
     shareScope: options.shareScope ?? 'default'
   } as Context
 
-  context.isHost = !!options.remotes && !context.expose.length
-  context.isRemote = !!context.expose.length
-  context.isShared = !!context.shared.length
-  context.hasRemote = !!context.remote.length
-
   let virtual
   return [
     {
@@ -80,18 +74,15 @@ export default function federation(
         // need to include remotes in the optimizeDeps.exclude
         const exclude = context.remote
           .map((item) => item[0])
-          .concat('__federation_shared')
-        const plugins: any[] = []
-        let needsInterop: string[] = []
-        if (context.isRemote && context.isShared) {
-          needsInterop = context.shared.map((item) => item[0])
-          plugins.push(optimizeDepsPlugin(context))
-        }
+          .concat(
+            context.shared
+              .filter((item) => item[0] !== item[1].packagePath)
+              .map((item) => item[0])
+          )
+
         return defu(config, {
           optimizeDeps: {
-            exclude: exclude,
-            esbuildOptions: { plugins },
-            needsInterop: needsInterop
+            exclude: exclude
           }
         })
       },
@@ -99,11 +90,11 @@ export default function federation(
         // get moduleGraph for dev mode dynamic reference
         context.viteDevServer = server
         server.middlewares.use(devMiddleware(context))
-        if (context.isRemote) {
+        if (context.expose.length) {
           const dts = await dtsMiddleware(context)
           dts && server.middlewares.use(dts)
         }
-        if (context.hasRemote && context.existsTypescript) {
+        if (context.remote.length && context.existsTypescript) {
           const printUrls = server.printUrls
           server.printUrls = function () {
             printUrls.call(this)
@@ -117,11 +108,9 @@ export default function federation(
       enforce: 'post',
       async buildStart() {
         virtual = createVirtual(context)
-        // if (context.hasRemote) {
         await resolveVersion.call(this, context)
-        // }
-        if (!context.viteDevServer) {
-          emitFiles.call(this, context)
+        if (!context.viteDevServer && context.expose.length) {
+          emitRemoteEntry.call(this, context)
         }
       },
       transform(code, id) {
@@ -132,12 +121,10 @@ export default function federation(
           return code.replace(
             /export default "(.+)"/,
             (_, content) =>
-              `import { assetsURL } from "__federation_utils"\nexport default assetsURL("${content}", import.meta.url)`
+              `import { assetsURL } from "__federation_shared"\nexport default assetsURL("${content}", import.meta.url)`
           )
         }
-        if (context.isHost || context.isRemote) {
-          return transform.call(this, context, code, id)
-        }
+        return transform.call(this, context, code, id)
       },
       async generateBundle(_, bundle) {
         processEntry.call(this, context, bundle)

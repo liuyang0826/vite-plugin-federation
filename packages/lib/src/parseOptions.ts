@@ -11,6 +11,7 @@ export function parseSharedOptions(options: VitePluginFederationOptions) {
     (_, key) => ({
       import: true,
       shareScope: options.shareScope,
+      shareKey: key,
       packagePath: key,
       generate: true,
       singleton: false,
@@ -19,6 +20,7 @@ export function parseSharedOptions(options: VitePluginFederationOptions) {
     (value, key) => {
       value.import = value.import ?? true
       value.shareScope = value.shareScope || options.shareScope
+      value.shareKey = value.shareKey || key
       value.packagePath = value.packagePath || key
       value.singleton = value.singleton ?? false
       value.strictVersion = value.strictVersion ?? true

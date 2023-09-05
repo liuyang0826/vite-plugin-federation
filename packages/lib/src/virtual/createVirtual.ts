@@ -3,7 +3,6 @@ import host from './host.js?raw'
 import shared from './shared.js?raw'
 import remote from './remote.js?raw'
 import semver from './semver.js?raw'
-import utils from './utils.js?raw'
 import { str } from '../utils'
 import type { Context } from 'types'
 
@@ -35,7 +34,6 @@ export default function createVirtual(context: Context) {
     __federation_shared: shared,
     __federation_host: __federation_host,
     __federation_remote: __federation_remote,
-    __federation_utils: utils,
     __federation_semver: semver
   })
 }

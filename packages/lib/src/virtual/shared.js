@@ -1,16 +1,14 @@
-import { unwrapDefault } from '__federation_utils'
 import {
   versionLt,
   rangeToString,
   satisfy,
-  parseVersion
+  parseRange
 } from '__federation_semver'
 
 export const sharedScope = Object.create(null)
-
-const sharedProviders = [
-  // sharedProvidersCode
-]
+const sharedProviderMap = {
+  // sharedProviderMapCode
+}
 
 const installed = {}
 
@@ -19,7 +17,7 @@ export function install(name) {
   installed[name] = 1
   if (!sharedScope[name]) sharedScope[name] = {}
   const scope = sharedScope[name]
-  sharedProviders.forEach(({ name, version, factory }) => {
+  sharedProviderMap[name]?.forEach(({ name, version, factory }) => {
     const versions = (scope[name] = scope[name] || {})
     const activeVersion = versions[version]
     if (!activeVersion) versions[version] = { get: factory }
@@ -133,7 +131,7 @@ const warnInvalidVersion = (scope, scopeName, key, requiredVersion) => {
 }
 const get = async (entry) => {
   entry.loaded = 1
-  return unwrapDefault(await entry.get())
+  return unwrapDefault((await entry.get())())
 }
 
 const init = (fn) => (scopeName, a, b, c) => {
@@ -215,12 +213,46 @@ const loadStrictSingletonVersionCheckFallback = /*#__PURE__*/ init(
   }
 )
 
-const importShared = (name) => {
+export const importShared = (name) => {
   return sharedConsumerMap[name]()
 }
 
-function importSharedDev(name, fallback) {
-  return sharedConsumerMap[name](fallback)
+export const unwrapDefault = (module) => {
+  if (!module) return module
+  const proxy = typeof module.default === 'function' ? module.default : {}
+  Object.keys(module)
+    .concat(module.default ? Object.keys(module.default) : [])
+    .forEach((k) => {
+      if (!Object.getOwnPropertyDescriptor(proxy, k)) {
+        Object.defineProperty(proxy, k, {
+          enumerable: true,
+          configurable: true,
+          get() {
+            return importRef(module, k)
+          },
+          set(v) {
+            try {
+              module[k] = v
+            } catch {
+              module.default[k] = v
+            }
+          }
+        })
+      }
+    })
+  return proxy
 }
 
-export { importShared, importSharedDev }
+export const importRef = (source, k) => {
+  return source[k] ?? source.default?.[k]
+}
+
+export const assetsURL = (url, importer) => {
+  if (url[0] === '/') {
+    return new URL(importer).origin + url
+  }
+  if (url[0] === '.') {
+    return new URL(url, importer).href
+  }
+  return url
+}

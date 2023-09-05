@@ -16,7 +16,4 @@
 export const DEFAULT_DTS = 'federation.d.ts'
 export const DEFAULT_ENTRY_FILENAME = 'remoteEntry.js'
 export const NAME_CHAR_REG = new RegExp('[0-9a-zA-Z@_-]+')
-export const COMMONJS_PROXY_SUFFIX = '?commonjs-proxy'
-export const OPTIMIZE_LOCAL_SUFFIX = '?federation_local'
-export const OPTIMIZE_DEPS_NAMESPACE = 'federation:optimize-deps'
 export const importQueryRE = /(\?|&)import=?(?:&|$)/

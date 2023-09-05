@@ -145,7 +145,7 @@ declare interface SharedConfig {
   /**
    * Module is looked up under this key from the share scope.
    */
-  // shareKey?: string
+  shareKey?: string
 
   /**
    * Share scope name.
@@ -172,10 +172,6 @@ declare interface Context {
   shared: [string, SharedConfig][]
   expose: [string, ExposesConfig][]
   remote: [string, RemotesConfig][]
-  isHost: boolean
-  isRemote: boolean
-  isShared: boolean
-  hasRemote: boolean
   assetsDir?: string
   filename: string
   exposesKeyMap: Map<string, string>

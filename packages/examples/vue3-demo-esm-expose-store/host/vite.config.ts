@@ -16,8 +16,6 @@ export default defineConfig({
             },
             shared: {
                 vue:{
-                    // This is an invalid configuration, because the generate attribute is not supported on the host side
-                    import:false
                 },
                 pinia:{
                 }

@@ -1,5 +1,4 @@
-import { unwrapDefault } from '__federation_utils'
-import { sharedScope, install } from '__federation_shared'
+import { sharedScope, install, unwrapDefault } from '__federation_shared'
 const remotesMap = {
   // remotesMapCode
 }
@@ -26,13 +25,13 @@ async function ensure(remoteName) {
   if ('var' === remote.format) {
     // loading js with script tag
     return loadJS(remote.external, remoteName).then((lib) => {
-      lib.init(sharedScope)
+      lib.init(sharedScope[scopeName])
       return lib
     })
   } else if (['esm', 'systemjs'].includes(remote.format)) {
     // loading js with import(...)
     return import(/* @vite-ignore */ remote.external).then((lib) => {
-      lib.init(sharedScope)
+      lib.init(sharedScope[scopeName])
       return lib
     })
   }

@@ -7,24 +7,43 @@ export default function injectShared(
   context: Context,
   code: string
 ) {
-  const sharedProvidersCode: string[] = context.shared
-    .filter((item) => context.isHost || item[1].import)
-    .map((item) => {
-      return `{ name: ${str(item[0])}, factory: () => import(${str(
+  const group = context.shared
+    .filter((item) => item[1].import)
+    .reduce((acc, item) => {
+      const code = `{ name: ${str(item[0])}, factory: () => import(${str(
         item[1].packagePath
-      )}), version: ${str(item[1].version)} }`
-    })
+      )}).then(module => () => module)${
+        item[1].version ? `, version: ${str(item[1].version)}` : ''
+      } }`
 
-  if (sharedProvidersCode.length) {
+      const shareScope = item[1].shareScope ?? 'default'
+
+      if (acc[shareScope]) {
+        acc[shareScope].push(code)
+      } else {
+        acc[shareScope] = [code]
+      }
+      return acc
+    }, {} as Record<string, string[]>)
+
+  const sharedProviderMapCode: string[] = Object.keys(group).map(
+    (shareScope) => {
+      return `${str(shareScope)}: [\n    ${group[shareScope].join(
+        ',\n    '
+      )}\n  ]`
+    }
+  )
+
+  if (sharedProviderMapCode.length) {
     code = code.replace(
-      '// sharedProvidersCode',
-      sharedProvidersCode.join(',\n  ')
+      '// sharedProviderMapCode',
+      sharedProviderMapCode.join(',\n  ')
     )
   }
 
   const sharedConsumerMapCode = context.shared.map((item) => {
     let fn = 'load'
-    const args = [str(item[1].shareScope ?? 'default'), str(item[0])]
+    const args = [str(item[1].shareScope ?? 'default'), str(item[1].shareKey)]
     if (item[1].requiredVersion) {
       if (item[1].strictVersion) {
         fn += 'Strict'
@@ -32,7 +51,7 @@ export default function injectShared(
       if (item[1].singleton) {
         fn += 'Singleton'
       }
-      args.push(`parseVersion(${str(item[1].requiredVersion)})`)
+      args.push(`parseRange(${str(item[1].requiredVersion)})`)
       fn += 'VersionCheck'
     } else {
       if (item[1].singleton) {
@@ -43,15 +62,11 @@ export default function injectShared(
       fn += 'Fallback'
     }
 
-    return `${str(item[0])}: (${
-      context.viteDevServer ? 'fallback' : ''
-    }) => ${fn}(${args.join(', ')}, ${
-      context.viteDevServer ? 'fallback ? fallback : ' : ''
-    }${
-      context.isHost || item[1].import
-        ? `() => import(${str(item[1].packagePath)}),`
-        : context.viteDevServer
-        ? 'undefined'
+    return `${str(item[0])}: () => ${fn}(${args.join(', ')}, ${
+      item[1].import
+        ? `() => import(${str(
+            item[1].packagePath
+          )}).then(module => () => module),`
         : ''
     })`
   })
