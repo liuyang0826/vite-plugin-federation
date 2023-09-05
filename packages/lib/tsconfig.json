@@ -1,5 +1,5 @@
 {
-  "include": ["src"],
+  "include": ["src", "client.d.ts"],
   "exclude": ["dist", "node_modules", "test"],
   "compilerOptions": {
     "outDir": "dist",
@@ -12,6 +12,9 @@
     "noUnusedLocals": true,
     "esModuleInterop": true,
     "baseUrl": ".",
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "paths": {
+      "@liuyang0826/vite-plugin-federation": ["./types"]
+    }
   }
 }
