@@ -9,7 +9,7 @@ import createVirtual from './virtual/createVirtual'
 import injectShared from './injectShared'
 import transform from './transform'
 import resolveVersion from './resolveVersion'
-import { emitRemoteEntry, emitDtsJSON } from './emitFiles'
+import emitFiles, { emitDtsJSON } from './emitFiles'
 import type { Context, VitePluginFederationOptions } from 'types'
 import { defu } from 'defu'
 import processEntry from './processEntry'
@@ -111,8 +111,8 @@ export default function federation(
       async buildStart() {
         virtual = createVirtual(context)
         await resolveVersion.call(this, context)
-        if (!context.viteDevServer && context.expose.length) {
-          emitRemoteEntry.call(this, context)
+        if (!context.viteDevServer) {
+          emitFiles.call(this, context)
         }
       },
       transform(code, id) {
