@@ -37,7 +37,9 @@ export default function devMiddleware(
       res.end = function (content, ...args) {
         return end.call(
           this,
-          content.replace(/__vite__injectQuery\(.+?\)/, 'remote.external'),
+          typeof content === 'string'
+            ? content.replace(/__vite__injectQuery\(.+?\)/, 'remote.external')
+            : content,
           // eslint-disable-next-line
           // @ts-ignore
           ...args
