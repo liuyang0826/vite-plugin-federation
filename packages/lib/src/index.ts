@@ -98,9 +98,14 @@ export default function federation(
         }
         if (context.remote.length && context.existsTypescript) {
           const printUrls = server.printUrls
-          server.printUrls = function () {
-            printUrls.call(this)
+          server.printUrls = function (...args) {
             fetchDeclaration(context, server)
+            printUrls.apply(this, args)
+          }
+          const restart = server.restart
+          server.restart = function (...args) {
+            fetchDeclaration(context, server)
+            return restart.apply(this, args)
           }
         }
       }
