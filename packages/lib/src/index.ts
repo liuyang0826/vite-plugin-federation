@@ -91,7 +91,7 @@ export default function federation(
       async configureServer(server) {
         // get moduleGraph for dev mode dynamic reference
         context.viteDevServer = server
-        server.middlewares.use(devMiddleware(context))
+        server.middlewares.use(devMiddleware(context, server))
         if (context.expose.length) {
           const dts = await dtsMiddleware(context)
           dts && server.middlewares.use(dts)

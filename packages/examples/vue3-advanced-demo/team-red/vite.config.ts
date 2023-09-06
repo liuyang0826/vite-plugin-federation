@@ -16,7 +16,7 @@ export default defineConfig({
           external: "http://localhost:5002/assets/remoteEntry-legacy.js",
           format: "systemjs"
         },
-        "team-green": "http://localhost:5001/assets/remoteEntry.js",
+        "team-green": "/remote-green/assets/remoteEntry.js",
       },
       shared: ['vue','pinia']
   })
@@ -24,6 +24,12 @@ export default defineConfig({
   server: {
     fs: {
       allow: ["../../../../"]
+    },
+    proxy: {
+      '/remote-green': {
+        target:"http://localhost:5001",
+        rewrite: path => path.replace('/remote-green', '')
+      }
     }
   },
   build:{

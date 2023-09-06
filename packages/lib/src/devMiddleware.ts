@@ -1,9 +1,10 @@
 import type { Context } from 'types'
-import type { Connect } from 'vite'
+import type { Connect, ViteDevServer } from 'vite'
 import { importQueryRE } from './constants'
 
 export default function devMiddleware(
-  context: Context
+  context: Context,
+  server: ViteDevServer
 ): Connect.NextHandleFunction {
   const {
     base,
@@ -31,11 +32,26 @@ export default function devMiddleware(
       }
       return next()
     }
+    if (req.url!.endsWith('/@id/__x00__virtual:__federation_host')) {
+      const end = res.end
+      res.end = function (content, ...args) {
+        return end.call(
+          this,
+          content.replace(/__vite__injectQuery\(.+?\)/, 'remote.external'),
+          // eslint-disable-next-line
+          // @ts-ignore
+          ...args
+        )
+      }
+      return next()
+    }
 
     if (req.url !== entryURL) return next()
 
     res.writeHead(302, {
-      Location: '/@id/__x00__virtual:__federation_remote',
+      Location: `${
+        server.resolvedUrls?.local[0] ?? '/'
+      }@id/__x00__virtual:__federation_remote`,
       'Access-Control-Allow-Origin': '*'
     })
     res.end()
