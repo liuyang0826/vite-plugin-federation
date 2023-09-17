@@ -1,6 +1,6 @@
 import type { Context } from 'types'
 import type { Connect, ViteDevServer } from 'vite'
-import { importQueryRE } from './constants'
+import { SPECIAL_QUERY_RE, importQueryRE, jsonExtRE } from './constants'
 
 export default function devMiddleware(
   context: Context,
@@ -14,7 +14,11 @@ export default function devMiddleware(
     context.filename
   }`
   return function (req, res, next) {
-    if (importQueryRE.test(req.url!)) {
+    if (
+      importQueryRE.test(req.url!) &&
+      !jsonExtRE.test(req.url!) &&
+      !SPECIAL_QUERY_RE.test(req.url!)
+    ) {
       const end = res.end
       res.end = function (content, ...args) {
         return end.call(

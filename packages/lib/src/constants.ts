@@ -17,3 +17,6 @@ export const DEFAULT_DTS = 'federation.d.ts'
 export const DEFAULT_ENTRY_FILENAME = 'remoteEntry.js'
 export const NAME_CHAR_REG = new RegExp('[0-9a-zA-Z@_-]+')
 export const importQueryRE = /(\?|&)import=?(?:&|$)/
+// Custom json filter for vite
+export const jsonExtRE = /\.json(?:$|\?)(?!commonjs-(?:proxy|external))/
+export const SPECIAL_QUERY_RE = /[?&](?:worker|sharedworker|raw|url)\b/
