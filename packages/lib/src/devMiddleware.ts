@@ -32,7 +32,7 @@ export default function devMiddleware(
       }
       return next()
     }
-    if (req.url!.endsWith('/@id/__x00__virtual:__federation_host')) {
+    if (req.url!.includes('/@id/__x00__virtual:__federation_host')) {
       const end = res.end
       res.end = function (content, ...args) {
         return end.call(
