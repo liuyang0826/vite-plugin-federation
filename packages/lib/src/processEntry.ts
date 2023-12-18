@@ -10,10 +10,20 @@ export default function processEntry(
   context: Context,
   bundle: OutputBundle
 ) {
+  const ext = extname(context.filename)
   for (const file in bundle) {
     const chunk = bundle[file] as OutputChunk
     if (chunk.facadeModuleId === '\0virtual:__federation_remote') {
       process(file, chunk)
+      // for legacy
+      chunk.fileName = chunk.fileName.replace(
+        /(.*?)_virtual___federation_remote(-.+?)?-.+/,
+        (_, prefix, tag) => {
+          return (
+            prefix + context.filename.slice(0, -ext.length) + (tag || '') + ext
+          )
+        }
+      )
       break
     }
   }
