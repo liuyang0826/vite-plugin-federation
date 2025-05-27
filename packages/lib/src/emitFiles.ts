@@ -11,7 +11,7 @@ export default function emitFiles(this: PluginContext, context: Context) {
       }`,
       type: 'chunk',
       id: '__federation_remote',
-      preserveSignature: 'strict'
+      preserveSignature: 'allow'
     })
   }
   if (context.shared.length) {
