@@ -1,5 +1,4 @@
 import type { Context } from 'types'
-import axios from 'axios'
 import { extname, join } from 'node:path'
 import { writeFileSync } from 'node:fs'
 import { normalizePath } from './utils'
@@ -28,7 +27,9 @@ export default async function fetchDeclaration(
       }
       return {
         module: module,
-        declarations: (await axios.get(url).then((res) => res.data)) as {
+        declarations: (await fetch(url)
+          .then((res) => res.json())
+          .then((res) => res.data)) as {
           name: string
           code: string
         }[]

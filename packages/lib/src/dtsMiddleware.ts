@@ -6,12 +6,6 @@ import dtsBuilder from './dtsBuilder'
 export default async function dtsMiddleware(
   context: Context
 ): Promise<Connect.NextHandleFunction | null> {
-  if (
-    !context.expose.some((item) => item[1].types) ||
-    !context.existsTypescript
-  )
-    return null
-
   const {
     base,
     build: { assetsDir }
@@ -23,7 +17,10 @@ export default async function dtsMiddleware(
 
   return async (req, res, next) => {
     if (req.url !== entryURL) return next()
-    const body = await dtsBuilder(context)
+    const body =
+      !context.expose.some((item) => item[1].types) || !context.existsTypescript
+        ? []
+        : await dtsBuilder(context)
     res.writeHead(200, {
       'Content-Type': 'application/json'
     })

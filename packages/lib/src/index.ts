@@ -31,7 +31,7 @@ export default function federation(
       return this.viteConfig?.build.assetsDir
     },
     filename: options.filename ?? DEFAULT_ENTRY_FILENAME,
-    dts: options.filename ?? DEFAULT_DTS,
+    dts: options.dts ?? DEFAULT_DTS,
     get existsTypescript() {
       if (existsTypescript === null) {
         existsTypescript = isPackageExists('typescript')
