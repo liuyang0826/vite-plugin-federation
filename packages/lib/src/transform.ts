@@ -249,21 +249,20 @@ export default function transform(
       const moduleId = container.arguments[0].value
       if (!moduleId) return
 
-      if (moduleId.indexOf('/') > -1) {
-        const remoteIndex = context.remoteRegExps.findIndex((r) =>
-          r.test(moduleId)
+      const remoteIndex = context.remoteRegExps.findIndex((r) =>
+        r.test(moduleId)
+      )
+      if (remoteIndex !== -1) {
+        const remote = context.remote[remoteIndex]
+        const modName = `.${moduleId.slice(remote[0].length)}`
+        magicString.overwrite(
+          container.start,
+          container.end,
+          `__federation_method_getRemote(${str(remote[0])} , ${str(modName)})`
         )
-        if (remoteIndex !== -1) {
-          const remote = context.remote[remoteIndex]
-          const modName = `.${moduleId.slice(remote[0].length)}`
-          magicString.overwrite(
-            container.start,
-            container.end,
-            `__federation_method_getRemote(${str(remote[0])} , ${str(modName)})`
-          )
-          hasGetRemote = true
-        }
+        hasGetRemote = true
       }
+
       const shared = context.shared.find(
         (sharedInfo) => sharedInfo[0] === moduleId
       )

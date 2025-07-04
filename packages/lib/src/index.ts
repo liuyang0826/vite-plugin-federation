@@ -41,7 +41,7 @@ export default function federation(
     get remoteRegExps() {
       if (remoteRegExps === null) {
         remoteRegExps = context.remote.map(
-          (item) => new RegExp(`^${item[0]}/.+?`)
+          (item) => new RegExp(`^${item[0]}(/.+?)?$`)
         )
       }
       return remoteRegExps
