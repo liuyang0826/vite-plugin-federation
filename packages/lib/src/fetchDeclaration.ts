@@ -27,9 +27,7 @@ export default async function fetchDeclaration(
       }
       return {
         module: module,
-        declarations: (await fetch(url)
-          .then((res) => res.json())
-          .then((res) => res.data)) as {
+        declarations: (await fetch(url).then((res) => res.json())) as {
           name: string
           code: string
         }[]
@@ -41,13 +39,15 @@ export default async function fetchDeclaration(
     .flatMap((item) => {
       if (item.status !== 'fulfilled') return ''
       const { module, declarations } = item.value
-      return declarations.map(
-        ({ name, code }) =>
-          `declare module "${normalizePath(join(module, name))}" {\n\t${code
-            .trim()
-            .split('\n')
-            .join('\n\t')}\n}`
-      )
+      return Array.isArray(declarations)
+        ? declarations.map(
+            ({ name, code }) =>
+              `declare module "${normalizePath(join(module, name))}" {\n\t${code
+                .trim()
+                .split('\n')
+                .join('\n\t')}\n}`
+          )
+        : []
     })
     .filter(Boolean)
 

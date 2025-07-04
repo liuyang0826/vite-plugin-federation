@@ -15,12 +15,12 @@ export default async function dtsMiddleware(
     assetsDir ? assetsDir + '/' : ''
   }${context.filename.replace(extname(context.filename), '.d.json')}`
 
+  const supportDTS =
+    context.existsTypescript && context.expose.some((item) => item[1].types)
+
   return async (req, res, next) => {
     if (req.url !== entryURL) return next()
-    const body =
-      !context.expose.some((item) => item[1].types) || !context.existsTypescript
-        ? []
-        : await dtsBuilder(context)
+    const body = supportDTS ? await dtsBuilder(context) : []
     res.writeHead(200, {
       'Content-Type': 'application/json'
     })
