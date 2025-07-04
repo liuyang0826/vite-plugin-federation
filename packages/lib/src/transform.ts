@@ -44,108 +44,103 @@ export default function transform(
       const moduleId = node.source?.value
       if (!moduleId) return
 
-      if (moduleId.indexOf('/') > -1) {
-        const remoteIndex = context.remoteRegExps.findIndex((r) =>
-          r.test(moduleId)
-        )
-        if (remoteIndex !== -1) {
-          const remote = context.remote[remoteIndex]
-          const afterImportName = `__federation_var_${moduleId.replace(
-            /[@/\\.-]/g,
-            ''
-          )}`
-          const modName = `.${moduleId.slice(remote[0].length)}`
-          switch (node.type) {
-            case 'ImportDeclaration': {
-              if (!hasStaticImported.has(moduleId)) {
-                hasStaticImported.set(moduleId, afterImportName)
-                magicString.overwrite(
-                  node.start,
-                  node.end,
-                  `const ${afterImportName} = await __federation_method_getRemote(${str(
-                    remote[0]
-                  )} , ${str(modName)});`
-                )
-                hasGetRemote = true
-              } else {
-                magicString.overwrite(node.start, node.end, '')
+      const remoteIndex = context.remoteRegExps.findIndex((r) =>
+        r.test(moduleId)
+      )
+      if (remoteIndex !== -1) {
+        const remote = context.remote[remoteIndex]
+        const afterImportName = `__federation_module_${moduleId.replace(
+          /[@/\\.-]/g,
+          ''
+        )}`
+        const modName = `.${moduleId.slice(remote[0].length)}`
+        switch (node.type) {
+          case 'ImportDeclaration': {
+            if (!hasStaticImported.has(moduleId)) {
+              hasStaticImported.set(moduleId, afterImportName)
+              magicString.overwrite(
+                node.start,
+                node.end,
+                `const ${afterImportName} = await __federation_method_getRemote(${str(
+                  remote[0]
+                )} , ${str(modName)});`
+              )
+              hasGetRemote = true
+            } else {
+              magicString.overwrite(node.start, node.end, '')
+            }
+            if (node.specifiers.length) {
+              if (!sourceLocalNamesMap[afterImportName]) {
+                sourceLocalNamesMap[afterImportName] = []
               }
-              if (node.specifiers.length) {
-                if (!sourceLocalNamesMap[afterImportName]) {
-                  sourceLocalNamesMap[afterImportName] = []
+              node.specifiers.forEach((spec) => {
+                // default import , like import a from 'lib'
+                if (spec.type === 'ImportDefaultSpecifier') {
+                  sourceLocalNamesMap[afterImportName].push({
+                    localName: spec.local.name,
+                    isDefault: true
+                  })
+                } else if (spec.type === 'ImportSpecifier') {
+                  //  like import {a as b} from 'lib'
+                  const localName = spec.local.name
+                  sourceLocalNamesMap[afterImportName].push({
+                    localName: localName,
+                    isDefault: false
+                  })
+                  magicString.appendRight(
+                    node.end,
+                    `\nconst __federation_var_${localName} = '${spec.imported.name}';`
+                  )
+                } else if (spec.type === 'ImportNamespaceSpecifier') {
+                  //  like import * as a from 'lib'
+                  sourceLocalNamesMap[afterImportName].push({
+                    localName: spec.local.name,
+                    isDefault: true
+                  })
                 }
-                node.specifiers.forEach((spec) => {
-                  // default import , like import a from 'lib'
-                  if (spec.type === 'ImportDefaultSpecifier') {
-                    sourceLocalNamesMap[afterImportName].push({
-                      localName: spec.local.name,
-                      isDefault: true
-                    })
-                  } else if (spec.type === 'ImportSpecifier') {
-                    //  like import {a as b} from 'lib'
-                    const localName = spec.local.name
-                    sourceLocalNamesMap[afterImportName].push({
-                      localName: localName,
-                      isDefault: false
-                    })
-                    magicString.appendRight(
-                      node.end,
-                      `\nconst __federation_var_${localName} = '${spec.imported.name}';`
-                    )
-                  } else if (spec.type === 'ImportNamespaceSpecifier') {
-                    //  like import * as a from 'lib'
-                    sourceLocalNamesMap[afterImportName].push({
-                      localName: spec.local.name,
-                      isDefault: true
-                    })
-                  }
-                })
-              }
-
-              break
-            }
-            case 'ExportNamedDeclaration': {
-              if (!hasStaticImported.has(moduleId)) {
-                hasStaticImported.set(moduleId, afterImportName)
-                magicString.overwrite(
-                  node.start,
-                  node.end,
-                  `const ${afterImportName} = await __federation_method_getRemote(${str(
-                    remote[0]
-                  )}, ${str(modName)});`
-                )
-                hasGetRemote = true
-              } else {
-                magicString.overwrite(node.start, node.end, '')
-              }
-              const specifiers = node.specifiers
-              let exportContent = ''
-              let deconstructContent = ''
-              specifiers.forEach((spec) => {
-                const localName = spec.local.name
-                const exportName = spec.exported.name
-                const variableName = `${afterImportName}_${localName}`
-                deconstructContent = deconstructContent.concat(
-                  `${localName}: ${variableName},`
-                )
-                exportContent = exportContent.concat(
-                  `${variableName} as ${exportName},`
-                )
               })
-              magicString.append(
-                `\nconst { ${deconstructContent.slice(
-                  0,
-                  deconstructContent.length - 1
-                )} } = ${afterImportName}; \n`
-              )
-              magicString.append(
-                `\nexport {${exportContent.slice(
-                  0,
-                  exportContent.length - 1
-                )}}; `
-              )
-              break
             }
+
+            break
+          }
+          case 'ExportNamedDeclaration': {
+            if (!hasStaticImported.has(moduleId)) {
+              hasStaticImported.set(moduleId, afterImportName)
+              magicString.overwrite(
+                node.start,
+                node.end,
+                `const ${afterImportName} = await __federation_method_getRemote(${str(
+                  remote[0]
+                )}, ${str(modName)});`
+              )
+              hasGetRemote = true
+            } else {
+              magicString.overwrite(node.start, node.end, '')
+            }
+            const specifiers = node.specifiers
+            let exportContent = ''
+            let deconstructContent = ''
+            specifiers.forEach((spec) => {
+              const localName = spec.local.name
+              const exportName = spec.exported.name
+              const variableName = `${afterImportName}_${localName}`
+              deconstructContent = deconstructContent.concat(
+                `${localName}: ${variableName},`
+              )
+              exportContent = exportContent.concat(
+                `${variableName} as ${exportName},`
+              )
+            })
+            magicString.append(
+              `\nconst { ${deconstructContent.slice(
+                0,
+                deconstructContent.length - 1
+              )} } = ${afterImportName}; \n`
+            )
+            magicString.append(
+              `\nexport {${exportContent.slice(0, exportContent.length - 1)}}; `
+            )
+            break
           }
         }
       }
@@ -155,16 +150,12 @@ export default function transform(
       )
 
       if (shared) {
-        const afterImportName = `__federation_var_${moduleId.replace(
+        const afterImportName = `__federation_module_${moduleId.replace(
           /[@/\\.-]/g,
           ''
         )}`
         switch (node.type) {
           case 'ImportDeclaration': {
-            const afterImportName = `__federation_var_${moduleId.replace(
-              /[@/\\.-]/g,
-              ''
-            )}`
             if (node.specifiers.length) {
               if (!sourceLocalNamesMap[afterImportName]) {
                 sourceLocalNamesMap[afterImportName] = []
