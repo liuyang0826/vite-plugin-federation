@@ -23,7 +23,8 @@ export default function devMiddleware(
       res.end = function (content, ...args) {
         return end.call(
           this,
-          typeof content === 'string'
+          typeof content === 'string' &&
+            !content.startsWith('export default "data:')
             ? content.replace(
                 'export default ',
                 'export default new URL(import.meta.url).origin + '
