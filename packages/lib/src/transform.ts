@@ -87,8 +87,7 @@ export default function transform(
                     localName: localName,
                     isDefault: false
                   })
-                  magicString.appendRight(
-                    node.end,
+                  magicString.prepend(
                     `\nconst __federation_var_${localName} = '${spec.imported.name}';`
                   )
                 } else if (spec.type === 'ImportNamespaceSpecifier') {
@@ -174,8 +173,7 @@ export default function transform(
                     localName: localName,
                     isDefault: false
                   })
-                  magicString.appendRight(
-                    node.end,
+                  magicString.prepend(
                     `\nconst __federation_var_${localName} = '${spec.imported.name}';`
                   )
                 } else if (spec.type === 'ImportNamespaceSpecifier') {
